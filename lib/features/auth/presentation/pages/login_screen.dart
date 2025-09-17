@@ -83,14 +83,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       
                       // Botón de login
                       _buildLoginButton(context, authState.isLoading),
-                      const SizedBox(height: 16),
-                      
-                      // Divisor
-                      _buildDivider(),
-                      const SizedBox(height: 16),
-                      
-                      // Login con redes sociales
-                      _buildSocialLogin(context),
                     ],
                   ),
                 ),
@@ -317,73 +309,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   /// Construye el divisor
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: Colors.grey[300])),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'O continúa con',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-        ),
-        Expanded(child: Divider(color: Colors.grey[300])),
-      ],
-    );
-  }
-
-  /// Construye los botones de login social
-  Widget _buildSocialLogin(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Implementar login con Google
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Login con Google próximamente'),
-                ),
-              );
-            },
-            icon: const Icon(Icons.g_mobiledata, size: 24),
-            label: const Text('Google'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              side: BorderSide(color: Colors.grey[300]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Implementar login con Facebook
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Login con Facebook próximamente'),
-                ),
-              );
-            },
-            icon: const Icon(Icons.facebook, size: 24),
-            label: const Text('Facebook'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              side: BorderSide(color: Colors.grey[300]!),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   /// Construye el link para registro
   Widget _buildRegisterLink(BuildContext context) {
     return Row(
