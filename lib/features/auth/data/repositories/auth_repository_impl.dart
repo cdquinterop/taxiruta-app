@@ -86,8 +86,8 @@ class AuthRepositoryImpl implements AuthRepository {
         // Guardar token de la nueva estructura
         final token = dataSection['token'];
         if (token != null) {
-          await _storage.write(key: 'access_token', value: token);
-          print('✅ LOGIN: Token guardado exitosamente');
+          await _storage.write(key: AppConstants.tokenKey, value: token);
+          print('✅ LOGIN: Token guardado exitosamente con clave: ${AppConstants.tokenKey}');
         } else {
           print('⚠️ LOGIN: ADVERTENCIA - No se encontró token en la respuesta');
         }

@@ -26,12 +26,15 @@ mixin _$TripModel {
   String get destination => throw _privateConstructorUsedError;
   DateTime get departureTime => throw _privateConstructorUsedError;
   int get availableSeats => throw _privateConstructorUsedError;
+  int get remainingSeats => throw _privateConstructorUsedError;
+  int? get realAvailableSeats =>
+      throw _privateConstructorUsedError; // Asientos disponibles considerando reservas pendientes
   double get pricePerSeat => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String get status => throw _privateConstructorUsedError;
   List<BookingModel>? get bookings => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
-  DateTime get updatedAt => throw _privateConstructorUsedError;
+  DateTime? get updatedAt => throw _privateConstructorUsedError;
 
   /// Serializes this TripModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -55,12 +58,14 @@ abstract class $TripModelCopyWith<$Res> {
       String destination,
       DateTime departureTime,
       int availableSeats,
+      int remainingSeats,
+      int? realAvailableSeats,
       double pricePerSeat,
       String? description,
       String status,
       List<BookingModel>? bookings,
       DateTime createdAt,
-      DateTime updatedAt});
+      DateTime? updatedAt});
 
   $UserModelCopyWith<$Res> get driver;
 }
@@ -86,12 +91,14 @@ class _$TripModelCopyWithImpl<$Res, $Val extends TripModel>
     Object? destination = null,
     Object? departureTime = null,
     Object? availableSeats = null,
+    Object? remainingSeats = null,
+    Object? realAvailableSeats = freezed,
     Object? pricePerSeat = null,
     Object? description = freezed,
     Object? status = null,
     Object? bookings = freezed,
     Object? createdAt = null,
-    Object? updatedAt = null,
+    Object? updatedAt = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -118,6 +125,14 @@ class _$TripModelCopyWithImpl<$Res, $Val extends TripModel>
           ? _value.availableSeats
           : availableSeats // ignore: cast_nullable_to_non_nullable
               as int,
+      remainingSeats: null == remainingSeats
+          ? _value.remainingSeats
+          : remainingSeats // ignore: cast_nullable_to_non_nullable
+              as int,
+      realAvailableSeats: freezed == realAvailableSeats
+          ? _value.realAvailableSeats
+          : realAvailableSeats // ignore: cast_nullable_to_non_nullable
+              as int?,
       pricePerSeat: null == pricePerSeat
           ? _value.pricePerSeat
           : pricePerSeat // ignore: cast_nullable_to_non_nullable
@@ -138,10 +153,10 @@ class _$TripModelCopyWithImpl<$Res, $Val extends TripModel>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
-      updatedAt: null == updatedAt
+      updatedAt: freezed == updatedAt
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
     ) as $Val);
   }
 
@@ -171,12 +186,14 @@ abstract class _$$TripModelImplCopyWith<$Res>
       String destination,
       DateTime departureTime,
       int availableSeats,
+      int remainingSeats,
+      int? realAvailableSeats,
       double pricePerSeat,
       String? description,
       String status,
       List<BookingModel>? bookings,
       DateTime createdAt,
-      DateTime updatedAt});
+      DateTime? updatedAt});
 
   @override
   $UserModelCopyWith<$Res> get driver;
@@ -201,12 +218,14 @@ class __$$TripModelImplCopyWithImpl<$Res>
     Object? destination = null,
     Object? departureTime = null,
     Object? availableSeats = null,
+    Object? remainingSeats = null,
+    Object? realAvailableSeats = freezed,
     Object? pricePerSeat = null,
     Object? description = freezed,
     Object? status = null,
     Object? bookings = freezed,
     Object? createdAt = null,
-    Object? updatedAt = null,
+    Object? updatedAt = freezed,
   }) {
     return _then(_$TripModelImpl(
       id: null == id
@@ -233,6 +252,14 @@ class __$$TripModelImplCopyWithImpl<$Res>
           ? _value.availableSeats
           : availableSeats // ignore: cast_nullable_to_non_nullable
               as int,
+      remainingSeats: null == remainingSeats
+          ? _value.remainingSeats
+          : remainingSeats // ignore: cast_nullable_to_non_nullable
+              as int,
+      realAvailableSeats: freezed == realAvailableSeats
+          ? _value.realAvailableSeats
+          : realAvailableSeats // ignore: cast_nullable_to_non_nullable
+              as int?,
       pricePerSeat: null == pricePerSeat
           ? _value.pricePerSeat
           : pricePerSeat // ignore: cast_nullable_to_non_nullable
@@ -253,10 +280,10 @@ class __$$TripModelImplCopyWithImpl<$Res>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
-      updatedAt: null == updatedAt
+      updatedAt: freezed == updatedAt
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
     ));
   }
 }
@@ -271,12 +298,14 @@ class _$TripModelImpl implements _TripModel {
       required this.destination,
       required this.departureTime,
       required this.availableSeats,
+      required this.remainingSeats,
+      this.realAvailableSeats,
       required this.pricePerSeat,
       this.description,
       required this.status,
       final List<BookingModel>? bookings,
       required this.createdAt,
-      required this.updatedAt})
+      this.updatedAt})
       : _bookings = bookings;
 
   factory _$TripModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -294,6 +323,11 @@ class _$TripModelImpl implements _TripModel {
   final DateTime departureTime;
   @override
   final int availableSeats;
+  @override
+  final int remainingSeats;
+  @override
+  final int? realAvailableSeats;
+// Asientos disponibles considerando reservas pendientes
   @override
   final double pricePerSeat;
   @override
@@ -313,11 +347,11 @@ class _$TripModelImpl implements _TripModel {
   @override
   final DateTime createdAt;
   @override
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
 
   @override
   String toString() {
-    return 'TripModel(id: $id, driver: $driver, origin: $origin, destination: $destination, departureTime: $departureTime, availableSeats: $availableSeats, pricePerSeat: $pricePerSeat, description: $description, status: $status, bookings: $bookings, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'TripModel(id: $id, driver: $driver, origin: $origin, destination: $destination, departureTime: $departureTime, availableSeats: $availableSeats, remainingSeats: $remainingSeats, realAvailableSeats: $realAvailableSeats, pricePerSeat: $pricePerSeat, description: $description, status: $status, bookings: $bookings, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -334,6 +368,10 @@ class _$TripModelImpl implements _TripModel {
                 other.departureTime == departureTime) &&
             (identical(other.availableSeats, availableSeats) ||
                 other.availableSeats == availableSeats) &&
+            (identical(other.remainingSeats, remainingSeats) ||
+                other.remainingSeats == remainingSeats) &&
+            (identical(other.realAvailableSeats, realAvailableSeats) ||
+                other.realAvailableSeats == realAvailableSeats) &&
             (identical(other.pricePerSeat, pricePerSeat) ||
                 other.pricePerSeat == pricePerSeat) &&
             (identical(other.description, description) ||
@@ -356,6 +394,8 @@ class _$TripModelImpl implements _TripModel {
       destination,
       departureTime,
       availableSeats,
+      remainingSeats,
+      realAvailableSeats,
       pricePerSeat,
       description,
       status,
@@ -387,12 +427,14 @@ abstract class _TripModel implements TripModel {
       required final String destination,
       required final DateTime departureTime,
       required final int availableSeats,
+      required final int remainingSeats,
+      final int? realAvailableSeats,
       required final double pricePerSeat,
       final String? description,
       required final String status,
       final List<BookingModel>? bookings,
       required final DateTime createdAt,
-      required final DateTime updatedAt}) = _$TripModelImpl;
+      final DateTime? updatedAt}) = _$TripModelImpl;
 
   factory _TripModel.fromJson(Map<String, dynamic> json) =
       _$TripModelImpl.fromJson;
@@ -410,6 +452,11 @@ abstract class _TripModel implements TripModel {
   @override
   int get availableSeats;
   @override
+  int get remainingSeats;
+  @override
+  int?
+      get realAvailableSeats; // Asientos disponibles considerando reservas pendientes
+  @override
   double get pricePerSeat;
   @override
   String? get description;
@@ -420,7 +467,7 @@ abstract class _TripModel implements TripModel {
   @override
   DateTime get createdAt;
   @override
-  DateTime get updatedAt;
+  DateTime? get updatedAt;
 
   /// Create a copy of TripModel
   /// with the given fields replaced by the non-null parameter values.

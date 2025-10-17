@@ -14,7 +14,7 @@ class Trip {
   final TripStatus status;
   final List<Booking>? bookings;
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
 
   const Trip({
     required this.id,
@@ -28,7 +28,7 @@ class Trip {
     required this.status,
     this.bookings,
     required this.createdAt,
-    required this.updatedAt,
+    this.updatedAt,
   });
 
   Trip copyWith({
@@ -95,6 +95,7 @@ class Trip {
 /// Estados posibles de un viaje
 enum TripStatus {
   active,
+  inProgress,
   cancelled,
   completed,
 }
@@ -105,6 +106,8 @@ extension TripStatusX on TripStatus {
     switch (this) {
       case TripStatus.active:
         return 'ACTIVE';
+      case TripStatus.inProgress:
+        return 'IN_PROGRESS';
       case TripStatus.cancelled:
         return 'CANCELLED';
       case TripStatus.completed:
@@ -116,6 +119,8 @@ extension TripStatusX on TripStatus {
     switch (status.toUpperCase()) {
       case 'ACTIVE':
         return TripStatus.active;
+      case 'IN_PROGRESS':
+        return TripStatus.inProgress;
       case 'CANCELLED':
         return TripStatus.cancelled;
       case 'COMPLETED':

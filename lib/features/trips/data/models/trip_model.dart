@@ -16,12 +16,14 @@ class TripModel with _$TripModel {
     required String destination,
     required DateTime departureTime,
     required int availableSeats,
+    required int remainingSeats,
+    int? realAvailableSeats, // Asientos disponibles considerando reservas pendientes
     required double pricePerSeat,
     String? description,
     required String status,
     List<BookingModel>? bookings,
     required DateTime createdAt,
-    required DateTime updatedAt,
+    DateTime? updatedAt,
   }) = _TripModel;
 
   factory TripModel.fromJson(Map<String, dynamic> json) =>
@@ -43,7 +45,7 @@ extension TripModelX on TripModel {
       status: TripStatusX.fromString(status),
       bookings: bookings?.map((booking) => booking.toEntity()).toList(),
       createdAt: createdAt,
-      updatedAt: updatedAt,
+      updatedAt: updatedAt, // Puede ser null
     );
   }
 }
@@ -57,6 +59,7 @@ extension TripX on Trip {
       destination: destination,
       departureTime: departureTime,
       availableSeats: availableSeats,
+      remainingSeats: remainingSeats,
       pricePerSeat: pricePerSeat,
       description: description,
       status: status.name,

@@ -11,8 +11,12 @@ import '../../features/passenger/presentation/pages/passenger_profile_page.dart'
 import '../../features/driver/presentation/pages/driver_dashboard_page.dart';
 import '../../features/driver/presentation/pages/driver_trips_page.dart';
 import '../../features/driver/presentation/pages/driver_bookings_page.dart';
-import '../../features/driver/presentation/pages/driver_profile_page.dart';
+import '../../features/driver/presentation/pages/driver_profile_page_improved.dart';
 import '../../features/driver/presentation/pages/create_trip_page.dart';
+import '../../features/trips/presentation/pages/trip_management_page.dart';
+import '../../features/trips/presentation/pages/all_trips_page.dart';
+import '../../features/trips/presentation/pages/edit_trip_page.dart';
+import '../../features/trips/data/models/trip_model.dart';
 
 /// Configuración de rutas de la aplicación TaxiRuta
 class AppRoutes {
@@ -36,6 +40,9 @@ class AppRoutes {
   static const String driverBookings = '/driver/bookings';
   static const String driverProfile = '/driver/profile';
   static const String driverCreateTrip = '/driver/create-trip';
+  static const String tripManagement = '/trips/management';
+  static const String allTrips = '/trips/all';
+  static const String editTrip = '/trips/edit';
 
   /// Configuración del router principal
   static GoRouter get router => _router;
@@ -134,6 +141,28 @@ class AppRoutes {
         path: driverCreateTrip,
         name: 'driver-create-trip',
         builder: (context, state) => const CreateTripPage(),
+      ),
+      GoRoute(
+        path: tripManagement,
+        name: 'trip-management',
+        builder: (context, state) => const MainNavigationPage(
+          child: TripManagementPage(),
+        ),
+      ),
+      GoRoute(
+        path: allTrips,
+        name: 'all-trips',
+        builder: (context, state) => const MainNavigationPage(
+          child: AllTripsPage(),
+        ),
+      ),
+      GoRoute(
+        path: editTrip,
+        name: 'edit-trip',
+        builder: (context, state) {
+          final trip = state.extra as TripModel;
+          return EditTripPage(trip: trip);
+        },
       ),
     ],
     redirect: (context, state) {

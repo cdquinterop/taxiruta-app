@@ -18,7 +18,6 @@ class MainNavigationPage extends ConsumerStatefulWidget {
 }
 
 class _MainNavigationPageState extends ConsumerState<MainNavigationPage> {
-  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -41,16 +40,17 @@ class _MainNavigationPageState extends ConsumerState<MainNavigationPage> {
 
   Widget _buildBottomNavigation(User user) {
     final isDriver = user.role.toUpperCase() == 'DRIVER';
+    final currentRoute = GoRouterState.of(context).uri.path;
+    
+    // Determinar el índice activo basándose en la ruta actual
+    int activeIndex = _getActiveIndex(currentRoute, isDriver);
     
     return BottomNavigationBar(
-      currentIndex: _currentIndex,
+      currentIndex: activeIndex,
       type: BottomNavigationBarType.fixed,
       selectedItemColor: Theme.of(context).primaryColor,
       unselectedItemColor: Colors.grey,
       onTap: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
         _navigateToPage(index, isDriver);
       },
       items: _getNavigationItems(isDriver),
@@ -106,7 +106,7 @@ class _MainNavigationPageState extends ConsumerState<MainNavigationPage> {
           _navigateToRoute('/driver/dashboard');
           break;
         case 1:
-          _navigateToRoute('/driver/trips');
+          _navigateToRoute('/trips/management');
           break;
         case 2:
           _navigateToRoute('/driver/bookings');
@@ -135,5 +135,22 @@ class _MainNavigationPageState extends ConsumerState<MainNavigationPage> {
 
   void _navigateToRoute(String route) {
     context.go(route);
+  }
+
+  int _getActiveIndex(String currentRoute, bool isDriver) {
+    if (isDriver) {
+      if (currentRoute.startsWith('/driver/dashboard')) return 0;
+      if (currentRoute.startsWith('/trips/management') || 
+          currentRoute.startsWith('/trips/all') ||
+          currentRoute.startsWith('/driver/trips')) return 1;
+      if (currentRoute.startsWith('/driver/bookings')) return 2;
+      if (currentRoute.startsWith('/driver/profile')) return 3;
+    } else {
+      if (currentRoute.startsWith('/passenger/dashboard')) return 0;
+      if (currentRoute.startsWith('/passenger/search')) return 1;
+      if (currentRoute.startsWith('/passenger/bookings')) return 2;
+      if (currentRoute.startsWith('/passenger/profile')) return 3;
+    }
+    return 0; // Default to first tab
   }
 }

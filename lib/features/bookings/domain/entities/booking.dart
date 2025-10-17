@@ -12,6 +12,9 @@ class Booking {
   final DateTime? confirmedDate;
   final DateTime createdAt;
   final DateTime updatedAt;
+  // Trip details for better context
+  final String? tripOrigin;
+  final String? tripDestination;
 
   const Booking({
     required this.id,
@@ -24,6 +27,8 @@ class Booking {
     this.confirmedDate,
     required this.createdAt,
     required this.updatedAt,
+    this.tripOrigin,
+    this.tripDestination,
   });
 
   Booking copyWith({
@@ -37,6 +42,8 @@ class Booking {
     DateTime? confirmedDate,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? tripOrigin,
+    String? tripDestination,
   }) {
     return Booking(
       id: id ?? this.id,
@@ -49,6 +56,8 @@ class Booking {
       confirmedDate: confirmedDate ?? this.confirmedDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      tripOrigin: tripOrigin ?? this.tripOrigin,
+      tripDestination: tripDestination ?? this.tripDestination,
     );
   }
 

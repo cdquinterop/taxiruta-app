@@ -28,8 +28,12 @@ mixin _$BookingModel {
   String get status => throw _privateConstructorUsedError;
   DateTime get bookingDate => throw _privateConstructorUsedError;
   DateTime? get confirmedDate => throw _privateConstructorUsedError;
-  DateTime get createdAt => throw _privateConstructorUsedError;
-  DateTime get updatedAt => throw _privateConstructorUsedError;
+  DateTime? get createdAt => throw _privateConstructorUsedError;
+  DateTime? get updatedAt =>
+      throw _privateConstructorUsedError; // Trip details for better context
+  String? get tripOrigin => throw _privateConstructorUsedError;
+  String? get tripDestination => throw _privateConstructorUsedError;
+  DateTime? get tripDepartureTime => throw _privateConstructorUsedError;
 
   /// Serializes this BookingModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -56,8 +60,11 @@ abstract class $BookingModelCopyWith<$Res> {
       String status,
       DateTime bookingDate,
       DateTime? confirmedDate,
-      DateTime createdAt,
-      DateTime updatedAt});
+      DateTime? createdAt,
+      DateTime? updatedAt,
+      String? tripOrigin,
+      String? tripDestination,
+      DateTime? tripDepartureTime});
 
   $UserModelCopyWith<$Res> get passenger;
 }
@@ -85,8 +92,11 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
     Object? status = null,
     Object? bookingDate = null,
     Object? confirmedDate = freezed,
-    Object? createdAt = null,
-    Object? updatedAt = null,
+    Object? createdAt = freezed,
+    Object? updatedAt = freezed,
+    Object? tripOrigin = freezed,
+    Object? tripDestination = freezed,
+    Object? tripDepartureTime = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -121,14 +131,26 @@ class _$BookingModelCopyWithImpl<$Res, $Val extends BookingModel>
           ? _value.confirmedDate
           : confirmedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      createdAt: null == createdAt
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
+              as DateTime?,
+      updatedAt: freezed == updatedAt
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
+      tripOrigin: freezed == tripOrigin
+          ? _value.tripOrigin
+          : tripOrigin // ignore: cast_nullable_to_non_nullable
+              as String?,
+      tripDestination: freezed == tripDestination
+          ? _value.tripDestination
+          : tripDestination // ignore: cast_nullable_to_non_nullable
+              as String?,
+      tripDepartureTime: freezed == tripDepartureTime
+          ? _value.tripDepartureTime
+          : tripDepartureTime // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ) as $Val);
   }
 
@@ -160,8 +182,11 @@ abstract class _$$BookingModelImplCopyWith<$Res>
       String status,
       DateTime bookingDate,
       DateTime? confirmedDate,
-      DateTime createdAt,
-      DateTime updatedAt});
+      DateTime? createdAt,
+      DateTime? updatedAt,
+      String? tripOrigin,
+      String? tripDestination,
+      DateTime? tripDepartureTime});
 
   @override
   $UserModelCopyWith<$Res> get passenger;
@@ -188,8 +213,11 @@ class __$$BookingModelImplCopyWithImpl<$Res>
     Object? status = null,
     Object? bookingDate = null,
     Object? confirmedDate = freezed,
-    Object? createdAt = null,
-    Object? updatedAt = null,
+    Object? createdAt = freezed,
+    Object? updatedAt = freezed,
+    Object? tripOrigin = freezed,
+    Object? tripDestination = freezed,
+    Object? tripDepartureTime = freezed,
   }) {
     return _then(_$BookingModelImpl(
       id: null == id
@@ -224,14 +252,26 @@ class __$$BookingModelImplCopyWithImpl<$Res>
           ? _value.confirmedDate
           : confirmedDate // ignore: cast_nullable_to_non_nullable
               as DateTime?,
-      createdAt: null == createdAt
+      createdAt: freezed == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      updatedAt: null == updatedAt
+              as DateTime?,
+      updatedAt: freezed == updatedAt
           ? _value.updatedAt
           : updatedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
+      tripOrigin: freezed == tripOrigin
+          ? _value.tripOrigin
+          : tripOrigin // ignore: cast_nullable_to_non_nullable
+              as String?,
+      tripDestination: freezed == tripDestination
+          ? _value.tripDestination
+          : tripDestination // ignore: cast_nullable_to_non_nullable
+              as String?,
+      tripDepartureTime: freezed == tripDepartureTime
+          ? _value.tripDepartureTime
+          : tripDepartureTime // ignore: cast_nullable_to_non_nullable
+              as DateTime?,
     ));
   }
 }
@@ -248,8 +288,11 @@ class _$BookingModelImpl implements _BookingModel {
       required this.status,
       required this.bookingDate,
       this.confirmedDate,
-      required this.createdAt,
-      required this.updatedAt});
+      this.createdAt,
+      this.updatedAt,
+      this.tripOrigin,
+      this.tripDestination,
+      this.tripDepartureTime});
 
   factory _$BookingModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$BookingModelImplFromJson(json);
@@ -271,13 +314,20 @@ class _$BookingModelImpl implements _BookingModel {
   @override
   final DateTime? confirmedDate;
   @override
-  final DateTime createdAt;
+  final DateTime? createdAt;
   @override
-  final DateTime updatedAt;
+  final DateTime? updatedAt;
+// Trip details for better context
+  @override
+  final String? tripOrigin;
+  @override
+  final String? tripDestination;
+  @override
+  final DateTime? tripDepartureTime;
 
   @override
   String toString() {
-    return 'BookingModel(id: $id, tripId: $tripId, passenger: $passenger, seatsRequested: $seatsRequested, totalPrice: $totalPrice, status: $status, bookingDate: $bookingDate, confirmedDate: $confirmedDate, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'BookingModel(id: $id, tripId: $tripId, passenger: $passenger, seatsRequested: $seatsRequested, totalPrice: $totalPrice, status: $status, bookingDate: $bookingDate, confirmedDate: $confirmedDate, createdAt: $createdAt, updatedAt: $updatedAt, tripOrigin: $tripOrigin, tripDestination: $tripDestination, tripDepartureTime: $tripDepartureTime)';
   }
 
   @override
@@ -301,7 +351,13 @@ class _$BookingModelImpl implements _BookingModel {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.updatedAt == updatedAt) &&
+            (identical(other.tripOrigin, tripOrigin) ||
+                other.tripOrigin == tripOrigin) &&
+            (identical(other.tripDestination, tripDestination) ||
+                other.tripDestination == tripDestination) &&
+            (identical(other.tripDepartureTime, tripDepartureTime) ||
+                other.tripDepartureTime == tripDepartureTime));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -317,7 +373,10 @@ class _$BookingModelImpl implements _BookingModel {
       bookingDate,
       confirmedDate,
       createdAt,
-      updatedAt);
+      updatedAt,
+      tripOrigin,
+      tripDestination,
+      tripDepartureTime);
 
   /// Create a copy of BookingModel
   /// with the given fields replaced by the non-null parameter values.
@@ -345,8 +404,11 @@ abstract class _BookingModel implements BookingModel {
       required final String status,
       required final DateTime bookingDate,
       final DateTime? confirmedDate,
-      required final DateTime createdAt,
-      required final DateTime updatedAt}) = _$BookingModelImpl;
+      final DateTime? createdAt,
+      final DateTime? updatedAt,
+      final String? tripOrigin,
+      final String? tripDestination,
+      final DateTime? tripDepartureTime}) = _$BookingModelImpl;
 
   factory _BookingModel.fromJson(Map<String, dynamic> json) =
       _$BookingModelImpl.fromJson;
@@ -368,9 +430,15 @@ abstract class _BookingModel implements BookingModel {
   @override
   DateTime? get confirmedDate;
   @override
-  DateTime get createdAt;
+  DateTime? get createdAt;
   @override
-  DateTime get updatedAt;
+  DateTime? get updatedAt; // Trip details for better context
+  @override
+  String? get tripOrigin;
+  @override
+  String? get tripDestination;
+  @override
+  DateTime? get tripDepartureTime;
 
   /// Create a copy of BookingModel
   /// with the given fields replaced by the non-null parameter values.

@@ -3,6 +3,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/error/exceptions.dart';
 import '../dto/trip_request_dto.dart';
 import '../models/trip_model.dart';
+import '../../../bookings/data/models/booking_model.dart';
 
 /// Servicio para consumir endpoints de viajes
 class TripService {
@@ -178,6 +179,219 @@ class TripService {
       } else {
         throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
       }
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Obtener viajes por estado específico
+  /// GET /api/trips/status/{status}
+  Future<List<TripModel>> getTripsByStatus(String status) async {
+    try {
+      final response = await _apiClient.dio.get('/api/trips/status/$status');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          final List<dynamic> tripsData = apiResponse['data'];
+          return tripsData.map((trip) => TripModel.fromJson(trip)).toList();
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to get trips by status', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to get trips by status with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Obtener viajes pendientes (ACTIVE)
+  /// GET /api/trips/pending
+  Future<List<TripModel>> getPendingTrips() async {
+    try {
+      final response = await _apiClient.dio.get('/api/trips/pending');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          final List<dynamic> tripsData = apiResponse['data'];
+          return tripsData.map((trip) => TripModel.fromJson(trip)).toList();
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to get pending trips', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to get pending trips with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Obtener viajes en curso (con reservas confirmadas)
+  /// GET /api/trips/in-progress
+  Future<List<TripModel>> getInProgressTrips() async {
+    try {
+      final response = await _apiClient.dio.get('/api/trips/in-progress');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          final List<dynamic> tripsData = apiResponse['data'];
+          return tripsData.map((trip) => TripModel.fromJson(trip)).toList();
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to get in progress trips', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to get in progress trips with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Obtener viajes completados
+  /// GET /api/trips/completed
+  Future<List<TripModel>> getCompletedTrips() async {
+    try {
+      final response = await _apiClient.dio.get('/api/trips/completed');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          final List<dynamic> tripsData = apiResponse['data'];
+          return tripsData.map((trip) => TripModel.fromJson(trip)).toList();
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to get completed trips', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to get completed trips with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Buscar viajes por destino con filtros opcionales
+  /// GET /api/trips/search
+  Future<List<TripModel>> searchTrips({
+    String? origin,
+    String? destination,
+    DateTime? departureDate,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {};
+      
+      if (origin != null && origin.isNotEmpty) {
+        queryParams['origin'] = origin;
+      }
+      if (destination != null && destination.isNotEmpty) {
+        queryParams['destination'] = destination;
+      }
+      if (departureDate != null) {
+        queryParams['departureDate'] = departureDate.toIso8601String();
+      }
+
+      final response = await _apiClient.dio.get(
+        '/api/trips/search',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          final List<dynamic> tripsData = apiResponse['data'];
+          return tripsData.map((trip) => TripModel.fromJson(trip)).toList();
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to search trips', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to search trips with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        throw ServerException('Parámetros de búsqueda inválidos', 400);
+      } else {
+        throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+      }
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Iniciar un viaje
+  /// POST /api/trips/{id}/start
+  Future<TripModel> startTrip(int tripId) async {
+    try {
+      final response = await _apiClient.dio.post('/api/trips/$tripId/start');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          return TripModel.fromJson(apiResponse['data']);
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to start trip', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to start trip with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Completar un viaje
+  /// POST /api/trips/{id}/complete
+  Future<TripModel> completeTrip(int tripId) async {
+    try {
+      final response = await _apiClient.dio.post('/api/trips/$tripId/complete');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          return TripModel.fromJson(apiResponse['data']);
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to complete trip', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to complete trip with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Obtener pasajeros confirmados de un viaje
+  /// GET /api/trips/{id}/passengers
+  Future<List<BookingModel>> getTripPassengers(int tripId) async {
+    try {
+      final response = await _apiClient.dio.get('/api/trips/$tripId/passengers');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          final List<dynamic> passengersData = apiResponse['data'];
+          return passengersData.map((passenger) => BookingModel.fromJson(passenger)).toList();
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to get trip passengers', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to get trip passengers with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
     } catch (e) {
       throw ServerException('Error inesperado: $e', 500);
     }

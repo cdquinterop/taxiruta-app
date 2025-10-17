@@ -17,8 +17,12 @@ class BookingModel with _$BookingModel {
     required String status,
     required DateTime bookingDate,
     DateTime? confirmedDate,
-    required DateTime createdAt,
-    required DateTime updatedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    // Trip details for better context
+    String? tripOrigin,
+    String? tripDestination,
+    DateTime? tripDepartureTime,
   }) = _BookingModel;
 
   factory BookingModel.fromJson(Map<String, dynamic> json) =>
@@ -37,8 +41,10 @@ extension BookingModelX on BookingModel {
       status: BookingStatusX.fromString(status),
       bookingDate: bookingDate,
       confirmedDate: confirmedDate,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
+      createdAt: createdAt ?? bookingDate, // Usar bookingDate como fallback
+      updatedAt: updatedAt ?? bookingDate, // Usar bookingDate como fallback
+      tripOrigin: tripOrigin,
+      tripDestination: tripDestination,
     );
   }
 }
@@ -56,6 +62,8 @@ extension BookingX on Booking {
       confirmedDate: confirmedDate,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      tripOrigin: tripOrigin,
+      tripDestination: tripDestination,
     );
   }
 }

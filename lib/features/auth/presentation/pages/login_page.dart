@@ -101,6 +101,8 @@ class _LoginPageState extends ConsumerState<LoginPage>
     _floatingAnimationController.repeat(reverse: true);
   }
 
+
+
   @override
   void dispose() {
     _mainAnimationController.dispose();
@@ -376,6 +378,26 @@ class _LoginPageState extends ConsumerState<LoginPage>
                     ],
                   ),
                   textAlign: TextAlign.center,
+                ),
+                
+                // Indicador de datos de prueba
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    '📝 Datos de prueba precargados',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.green[100],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 
                 const SizedBox(height: 32),

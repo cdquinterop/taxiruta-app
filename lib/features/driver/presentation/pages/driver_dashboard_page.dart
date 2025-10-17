@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/state/auth_provider.dart';
+import '../../../../core/config/app_routes.dart';
+import '../../../trips/presentation/state/trip_provider.dart';
+import '../../../trips/presentation/widgets/trip_card.dart';
+import '../../../trips/data/models/trip_model.dart';
 
 /// Dashboard principal para conductores
 class DriverDashboardPage extends ConsumerStatefulWidget {
@@ -12,7 +16,17 @@ class DriverDashboardPage extends ConsumerStatefulWidget {
 }
 
 class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
-  bool _isOnline = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cargar datos de viajes al inicializar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tripProvider.notifier).loadCompletedTrips();
+      ref.read(tripProvider.notifier).loadInProgressTrips();
+      ref.read(tripProvider.notifier).loadPendingTrips();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,20 +39,6 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
         backgroundColor: Colors.green[600],
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          // Toggle online/offline
-          Switch(
-            value: _isOnline,
-            onChanged: (value) {
-              setState(() {
-                _isOnline = value;
-              });
-              _toggleOnlineStatus(value);
-            },
-            activeColor: Colors.white,
-          ),
-          const SizedBox(width: 16),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -74,6 +74,9 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
   }
 
   Widget _buildStatusCard() {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    
     return Card(
       elevation: 4,
       child: Container(
@@ -82,9 +85,7 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: LinearGradient(
-            colors: _isOnline 
-                ? [Colors.green[600]!, Colors.green[400]!]
-                : [Colors.grey[600]!, Colors.grey[400]!],
+            colors: [Colors.green[600]!, Colors.green[400]!],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -94,31 +95,64 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
           children: [
             Row(
               children: [
-                Icon(
-                  _isOnline ? Icons.radio_button_checked : Icons.radio_button_off,
-                  color: Colors.white,
-                  size: 32,
+                CircleAvatar(
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  _isOnline ? 'CONECTADO' : 'DESCONECTADO',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.fullName ?? 'Conductor',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Conductor Verificado',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Activo',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _isOnline 
-                  ? 'Estás disponible para recibir viajes'
-                  : 'Actívate para empezar a recibir viajes',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
             ),
           ],
         ),
@@ -222,7 +256,7 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
           ),
         ),
         const SizedBox(height: 12),
-        _isOnline ? _buildActiveTripCard() : _buildNoActiveTrips(),
+        _buildActiveTripCard(),
       ],
     );
   }
@@ -429,9 +463,7 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              _isOnline 
-                  ? 'Esperando solicitudes de viaje...'
-                  : 'Conéctate para recibir solicitudes',
+              'No tienes viajes activos en este momento',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
@@ -465,21 +497,19 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
                 subtitle: 'Nuevo viaje',
                 color: Colors.green,
                 onTap: () {
-                  context.push('/driver/create-trip');
+                  context.push(AppRoutes.driverCreateTrip);
                 },
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
-                icon: Icons.history,
-                title: 'Historial',
-                subtitle: 'Ver viajes',
+                icon: Icons.manage_history,
+                title: 'Gestión',
+                subtitle: 'Mis viajes',
                 color: Colors.purple,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Navegando a historial...')),
-                  );
+                  context.push(AppRoutes.tripManagement);
                 },
               ),
             ),
@@ -574,6 +604,52 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
   }
 
   Widget _buildRecentTrips() {
+    final tripState = ref.watch(tripProvider);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Filtrar viajes por fecha de hoy únicamente
+    final todayTrips = <TripModel>[];
+    
+    // Filtrar viajes en progreso de hoy
+    for (final trip in tripState.inProgressTrips) {
+      final tripDate = DateTime(
+        trip.departureTime.year,
+        trip.departureTime.month,
+        trip.departureTime.day,
+      );
+      if (tripDate.isAtSameMomentAs(today)) {
+        todayTrips.add(trip);
+      }
+    }
+    
+    // Filtrar viajes pendientes de hoy
+    for (final trip in tripState.pendingTrips) {
+      final tripDate = DateTime(
+        trip.departureTime.year,
+        trip.departureTime.month,
+        trip.departureTime.day,
+      );
+      if (tripDate.isAtSameMomentAs(today)) {
+        todayTrips.add(trip);
+      }
+    }
+    
+    // Filtrar viajes completados de hoy
+    for (final trip in tripState.completedTrips) {
+      final tripDate = DateTime(
+        trip.departureTime.year,
+        trip.departureTime.month,
+        trip.departureTime.day,
+      );
+      if (tripDate.isAtSameMomentAs(today)) {
+        todayTrips.add(trip);
+      }
+    }
+    
+    // Mostrar máximo 3 viajes de hoy
+    final recentTrips = todayTrips.take(3).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -581,7 +657,7 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Viajes Recientes',
+              'Viajes de Hoy',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -589,99 +665,49 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
             ),
             TextButton(
               onPressed: () {
-                // TODO: Ver todos los viajes
+                context.push(AppRoutes.allTrips);
               },
               child: const Text('Ver todos'),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 3,
-          itemBuilder: (context, index) {
-            return _buildTripItem(
-              passenger: 'Pasajero ${index + 1}',
-              origin: 'Punto A',
-              destination: 'Punto B',
-              date: '${15 + index} Sep 2025',
-              earnings: '\$${8000 + (index * 2000)}',
-              rating: 4.8 + (index * 0.1),
-            );
-          },
-        ),
+        recentTrips.isEmpty
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Text(
+                    'No hay viajes programados para hoy',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: recentTrips.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: TripCard(
+                      trip: recentTrips[index],
+                      isDriverView: true,
+                      isCompact: true,
+                      showActions: true,
+                    ),
+                  );
+                },
+              ),
       ],
     );
   }
 
-  Widget _buildTripItem({
-    required String passenger,
-    required String origin,
-    required String destination,
-    required String date,
-    required String earnings,
-    required double rating,
-  }) {
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.green[100],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(
-            Icons.directions_car,
-            color: Colors.green,
-          ),
-        ),
-        title: Text('$origin → $destination'),
-        subtitle: Text('$passenger • $date'),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              earnings,
-              style: TextStyle(
-                color: Colors.green[600],
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.star, color: Colors.amber, size: 16),
-                Text(
-                  rating.toStringAsFixed(1),
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  void _toggleOnlineStatus(bool isOnline) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isOnline 
-              ? 'Te has conectado. Ahora puedes recibir viajes.'
-              : 'Te has desconectado. No recibirás más viajes.',
-        ),
-        backgroundColor: isOnline ? Colors.green : Colors.grey[600],
-      ),
-    );
-  }
+
+
 
   void _callPassenger() {
     ScaffoldMessenger.of(context).showSnackBar(

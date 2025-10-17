@@ -13,6 +13,7 @@ dependencies:
 
   # HTTP client
   dio: ^5.5.0+1
+  http: ^1.1.0
   
   # State management
   flutter_riverpod: ^2.5.1
@@ -45,6 +46,9 @@ dependencies:
   
   # Connectivity
   connectivity_plus: ^6.0.3
+  
+  # URL launcher for phone calls
+  url_launcher: ^6.3.0
   
   # Image handling
   cached_network_image: ^3.3.1

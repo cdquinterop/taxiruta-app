@@ -9,14 +9,14 @@ part 'user_model.g.dart';
 class UserModel with _$UserModel {
   const factory UserModel({
     required int id,
-    @JsonKey(name: 'firstName') required String firstName,
-    @JsonKey(name: 'lastName') required String lastName,
+    String? username,
+    required String fullName,
     required String email,
-    required String phone,
+    required String phoneNumber,
     required String role,
     required bool active,
-    @JsonKey(name: 'createdAt') DateTime? createdAt,
-    @JsonKey(name: 'updatedAt') DateTime? updatedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>
@@ -26,12 +26,17 @@ class UserModel with _$UserModel {
 /// Extensión para convertir entre UserModel y User entity
 extension UserModelX on UserModel {
   User toEntity() {
+    // Dividir fullName en firstName y lastName
+    final nameParts = fullName.split(' ');
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+    
     return User(
       id: id,
       firstName: firstName,
       lastName: lastName,
       email: email,
-      phone: phone,
+      phone: phoneNumber,
       role: role,
       active: active,
       createdAt: createdAt,
@@ -44,10 +49,10 @@ extension UserX on User {
   UserModel toModel() {
     return UserModel(
       id: id,
-      firstName: firstName,
-      lastName: lastName,
+      username: email, // Usar email como username
+      fullName: '$firstName $lastName'.trim(),
       email: email,
-      phone: phone,
+      phoneNumber: phone,
       role: role,
       active: active,
       createdAt: createdAt,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../trips/presentation/state/trip_provider.dart';
 
 /// Página para crear nuevos viajes por parte del conductor
 class CreateTripPage extends ConsumerStatefulWidget {
@@ -34,6 +35,8 @@ class _CreateTripPageState extends ConsumerState<CreateTripPage> {
 
   @override
   Widget build(BuildContext context) {
+    final tripState = ref.watch(tripNotifierProvider);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crear Nuevo Viaje'),
@@ -154,15 +157,31 @@ class _CreateTripPageState extends ConsumerState<CreateTripPage> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _createTrip,
+                      onPressed: tripState.isCreating ? null : _createTrip,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[600],
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: Text(
-                        _tripType == 'immediate' ? 'Publicar Ahora' : 'Programar Viaje',
-                      ),
+                      child: tripState.isCreating
+                          ? const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text('Creando...'),
+                              ],
+                            )
+                          : Text(
+                              _tripType == 'immediate' ? 'Publicar Ahora' : 'Programar Viaje',
+                            ),
                     ),
                   ),
                 ],
@@ -524,45 +543,93 @@ class _CreateTripPageState extends ConsumerState<CreateTripPage> {
     );
   }
 
-  void _createTrip() {
+  void _createTrip() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // TODO: Implementar lógica para crear el viaje
-    final tripData = {
-      'from': _fromController.text,
-      'to': _toController.text,
-      'price': _priceController.text,
-      'seats': _seatsController.text,
-      'description': _descriptionController.text,
-      'type': _tripType,
-      'date': _tripType == 'scheduled' ? _selectedDate.toIso8601String() : null,
-      'time': _tripType == 'scheduled' ? '${_selectedTime.hour}:${_selectedTime.minute}' : null,
-    };
+    // Preparar los datos del viaje
+    final DateTime departureTime = _tripType == 'immediate' 
+        ? DateTime.now().add(const Duration(minutes: 5)) // Para viajes inmediatos, 5 minutos desde ahora
+        : DateTime(
+            _selectedDate.year,
+            _selectedDate.month,
+            _selectedDate.day,
+            _selectedTime.hour,
+            _selectedTime.minute,
+          );
 
-    print('Crear viaje: $tripData');
+    final double pricePerSeat = double.tryParse(_priceController.text) ?? 0.0;
+    final int availableSeats = int.tryParse(_seatsController.text) ?? 1;
 
-    // Mostrar confirmación
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('¡Viaje Creado!'),
-        content: Text(
-          _tripType == 'immediate' 
-            ? 'Tu viaje está ahora disponible para los pasajeros.'
-            : 'Tu viaje ha sido programado exitosamente.',
+    print('🚗 Creando viaje:');
+    print('  Origen: ${_fromController.text}');
+    print('  Destino: ${_toController.text}');
+    print('  Fecha/Hora: $departureTime');
+    print('  Precio: $pricePerSeat');
+    print('  Asientos: $availableSeats');
+    print('  Tipo: $_tripType');
+
+    try {
+      // Llamar al provider para crear el viaje
+      final success = await ref.read(tripNotifierProvider.notifier).createTrip(
+        origin: _fromController.text,
+        destination: _toController.text,
+        departureTime: departureTime,
+        availableSeats: availableSeats,
+        pricePerSeat: pricePerSeat,
+        description: _descriptionController.text.isNotEmpty ? _descriptionController.text : null,
+      );
+
+      if (success) {
+        // Mostrar confirmación
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('¡Viaje Creado!'),
+              content: Text(
+                _tripType == 'immediate' 
+                  ? 'Tu viaje está ahora disponible para los pasajeros.'
+                  : 'Tu viaje ha sido programado exitosamente.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Cerrar diálogo
+                    context.pop(); // Volver a la página anterior
+                  },
+                  child: const Text('Entendido'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        // Mostrar error
+        _showErrorDialog('Error al crear el viaje. Por favor intenta nuevamente.');
+      }
+    } catch (e) {
+      print('❌ Error creando viaje: $e');
+      _showErrorDialog('Error al crear el viaje: $e');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Cerrar diálogo
-              context.pop(); // Volver a la página anterior
-            },
-            child: const Text('Entendido'),
-          ),
-        ],
-      ),
-    );
+      );
+    }
   }
 }

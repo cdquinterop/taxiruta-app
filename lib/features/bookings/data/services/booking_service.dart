@@ -33,7 +33,26 @@ class BookingService {
       if (e.response?.statusCode == 403) {
         throw ServerException('No tienes permisos para crear reservas', 403);
       } else if (e.response?.statusCode == 400) {
-        throw ServerException('Datos de entrada inválidos o no hay asientos disponibles', 400);
+        // Parsear el mensaje específico del servidor
+        String errorMessage = 'Datos de entrada inválidos o no hay asientos disponibles';
+        try {
+          final responseData = e.response?.data;
+          if (responseData is Map<String, dynamic> && responseData['message'] != null) {
+            final serverMessage = responseData['message'].toString().toLowerCase();
+            if (serverMessage.contains('booking already exists')) {
+              errorMessage = 'Ya tienes una reserva activa para este viaje';
+            } else if (serverMessage.contains('no available seats') || serverMessage.contains('insufficient seats')) {
+              errorMessage = 'No hay suficientes asientos disponibles';
+            } else if (serverMessage.contains('invalid seats')) {
+              errorMessage = 'Cantidad de asientos inválida';
+            } else {
+              errorMessage = responseData['message'];
+            }
+          }
+        } catch (_) {
+          // Si hay error parseando, usar mensaje por defecto
+        }
+        throw ServerException(errorMessage, 400);
       } else if (e.response?.statusCode == 404) {
         throw ServerException('Viaje no encontrado', 404);
       } else {
@@ -163,10 +182,10 @@ class BookingService {
   }
 
   /// Obtener reservas del usuario autenticado
-  /// GET /api/bookings/my-bookings (asumiendo que existe este endpoint o usar getUserBookings con el ID del usuario actual)
+  /// GET /api/my-bookings
   Future<List<BookingModel>> getMyBookings() async {
     try {
-      final response = await _apiClient.dio.get('/api/bookings/my-bookings');
+      final response = await _apiClient.dio.get('/api/my-bookings');
 
       if (response.statusCode == 200) {
         final apiResponse = response.data;
@@ -181,6 +200,63 @@ class BookingService {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
+        throw ServerException('No autorizado', 401);
+      } else {
+        throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+      }
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Cancelar una reserva
+  /// DELETE /api/trips/{tripId}/bookings/{bookingId}
+  Future<void> cancelBooking(int tripId, int bookingId) async {
+    try {
+      final response = await _apiClient.dio.delete('/api/trips/$tripId/bookings/$bookingId');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] != true) {
+          throw ServerException(apiResponse['message'] ?? 'Booking cancellation failed', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Booking cancellation failed with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        throw ServerException('No tienes permisos para cancelar esta reserva', 403);
+      } else if (e.response?.statusCode == 404) {
+        throw ServerException('Reserva o viaje no encontrado', 404);
+      } else {
+        throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
+      }
+    } catch (e) {
+      throw ServerException('Error inesperado: $e', 500);
+    }
+  }
+
+  /// Obtener reservas pendientes para el conductor autenticado
+  /// GET /api/driver/pending-bookings
+  Future<List<BookingModel>> getPendingBookingsForDriver() async {
+    try {
+      final response = await _apiClient.dio.get('/api/driver/pending-bookings');
+
+      if (response.statusCode == 200) {
+        final apiResponse = response.data;
+        if (apiResponse['success'] == true && apiResponse['data'] != null) {
+          final List<dynamic> bookingsData = apiResponse['data'];
+          return bookingsData.map((booking) => BookingModel.fromJson(booking)).toList();
+        } else {
+          throw ServerException(apiResponse['message'] ?? 'Failed to get pending bookings', response.statusCode ?? 500);
+        }
+      } else {
+        throw ServerException('Failed to get pending bookings with status code: ${response.statusCode}', response.statusCode ?? 500);
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        throw ServerException('No tienes permisos para ver estas reservas', 403);
+      } else if (e.response?.statusCode == 401) {
         throw ServerException('No autorizado', 401);
       } else {
         throw ServerException('Error de conexión: ${e.message}', e.response?.statusCode ?? 500);
