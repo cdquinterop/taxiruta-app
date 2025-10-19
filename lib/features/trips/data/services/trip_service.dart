@@ -331,7 +331,13 @@ class TripService {
   /// POST /api/trips/{id}/start
   Future<TripModel> startTrip(int tripId) async {
     try {
+      print('🚗 FLUTTER: Sending startTrip request for trip ID: $tripId');
+      print('🚗 FLUTTER: Request URL: /api/trips/$tripId/start');
+      
       final response = await _apiClient.dio.post('/api/trips/$tripId/start');
+      
+      print('🚗 FLUTTER: Response status: ${response.statusCode}');
+      print('🚗 FLUTTER: Response data: ${response.data}');
 
       if (response.statusCode == 200) {
         final apiResponse = response.data;

@@ -68,13 +68,101 @@ class DriverTripsNotifier extends StateNotifier<DriverTripsState> {
     try {
       final trips = await _tripService.getMyTrips();
       
-      // Filtrar por estado
-      final activeTrips = trips.where((trip) => trip.status == 'ACTIVE').toList();
-      final inProgressTrips = trips.where((trip) => trip.status == 'IN_PROGRESS').toList();
-      final completedTrips = trips.where((trip) => trip.status == 'COMPLETED').toList();
+      // Filtrar y ordenar viajes según las nuevas reglas:
+      // 1. Viajes de hoy y futuros: TODOS los estados
+      // 2. Viajes pasados: Solo COMPLETED e IN_PROGRESS (NO ACTIVE vencidos)
+      // 3. Viajes de hoy primero, luego futuros ordenados por fecha
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      
+      // Filtrar viajes válidos
+      final validTrips = trips.where((trip) {
+        final tripDate = DateTime(
+          trip.departureTime.year,
+          trip.departureTime.month,
+          trip.departureTime.day,
+        );
+        
+        // Viajes de hoy o futuros: incluir todos los estados
+        if (tripDate.isAtSameMomentAs(today) || tripDate.isAfter(today)) {
+          return true;
+        }
+        
+        // Viajes pasados: solo incluir COMPLETED e IN_PROGRESS
+        return trip.status == 'COMPLETED' || trip.status == 'IN_PROGRESS';
+      }).toList();
+      
+      // Separar viajes de hoy vs futuros vs pasados
+      final todayTrips = validTrips.where((trip) {
+        final tripDate = DateTime(
+          trip.departureTime.year,
+          trip.departureTime.month,
+          trip.departureTime.day,
+        );
+        return tripDate.isAtSameMomentAs(today);
+      }).toList();
+      
+      final futureTrips = validTrips.where((trip) {
+        final tripDate = DateTime(
+          trip.departureTime.year,
+          trip.departureTime.month,
+          trip.departureTime.day,
+        );
+        return tripDate.isAfter(today);
+      }).toList();
+      
+      final pastTrips = validTrips.where((trip) {
+        final tripDate = DateTime(
+          trip.departureTime.year,
+          trip.departureTime.month,
+          trip.departureTime.day,
+        );
+        return tripDate.isBefore(today);
+      }).toList();
+      
+      // Ordenar viajes de hoy por hora de salida (más próximos primero)
+      todayTrips.sort((a, b) => a.departureTime.compareTo(b.departureTime));
+      
+      // Ordenar viajes futuros por fecha de salida
+      futureTrips.sort((a, b) => a.departureTime.compareTo(b.departureTime));
+      
+      // Ordenar viajes pasados por fecha de salida (más recientes primero)
+      pastTrips.sort((a, b) => b.departureTime.compareTo(a.departureTime));
+      
+      // Combinar: primero hoy, luego futuros, luego pasados
+      final sortedValidTrips = [...todayTrips, ...futureTrips, ...pastTrips];
+      
+      print('🚗 DEBUG: Total trips from backend: ${trips.length}');
+      
+      // Agregar debug detallado de fechas
+      print('🚗 DEBUG: Current date: $now');
+      print('🚗 DEBUG: Today: $today');
+      
+      for (var trip in trips.take(3)) { // Solo los primeros 3 para no saturar
+        final tripDate = DateTime(
+          trip.departureTime.year,
+          trip.departureTime.month,
+          trip.departureTime.day,
+        );
+        print('🚗 DEBUG Trip ${trip.id}: departureTime=${trip.departureTime}, tripDate=$tripDate, status=${trip.status}');
+        print('🚗 DEBUG Trip ${trip.id}: isToday=${tripDate.isAtSameMomentAs(today)}, isFuture=${tripDate.isAfter(today)}');
+      }
+      
+      print('🚗 DEBUG: Today trips: ${todayTrips.length}');
+      print('🚗 DEBUG: Future trips: ${futureTrips.length}');
+      print('🚗 DEBUG: Total valid trips: ${sortedValidTrips.length}');
+      
+      // Filtrar por estado manteniendo el orden
+      final activeTrips = sortedValidTrips.where((trip) => trip.status == 'ACTIVE').toList();
+      final inProgressTrips = sortedValidTrips.where((trip) => trip.status == 'IN_PROGRESS').toList();
+      final completedTrips = sortedValidTrips.where((trip) => trip.status == 'COMPLETED').toList();
 
+      print('🚗 DEBUG: Active trips: ${activeTrips.length}');
+      print('🚗 DEBUG: InProgress trips: ${inProgressTrips.length}');
+      print('🚗 DEBUG: Completed trips: ${completedTrips.length}');
+      
       state = state.copyWith(
-        myTrips: trips,
+        myTrips: sortedValidTrips,
         activeTrips: activeTrips,
         inProgressTrips: inProgressTrips,
         completedTrips: completedTrips,
