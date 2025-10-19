@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/trip_card.dart';
-import '../state/trip_provider.dart';
+import '../../../driver/presentation/state/driver_trips_provider.dart';
 import '../../data/models/trip_model.dart';
 import '../../../../core/config/app_routes.dart';
 
@@ -45,23 +45,13 @@ class _TripManagementPageState extends ConsumerState<TripManagementPage>
   }
 
   void _loadTripsForCurrentTab() {
-    final tripNotifier = ref.read(tripProvider.notifier);
-    switch (_currentIndex) {
-      case 0: // Pendientes
-        tripNotifier.loadPendingTrips();
-        break;
-      case 1: // En Curso
-        tripNotifier.loadInProgressTrips();
-        break;
-      case 2: // Completados
-        tripNotifier.loadCompletedTrips();
-        break;
-    }
+    // Siempre cargar todos los viajes del conductor y luego filtrar por estado
+    ref.read(driverTripsProvider.notifier).loadMyTrips();
   }
 
   @override
   Widget build(BuildContext context) {
-    final tripState = ref.watch(tripProvider);
+    final tripsState = ref.watch(driverTripsProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -124,11 +114,11 @@ class _TripManagementPageState extends ConsumerState<TripManagementPage>
               controller: _tabController,
               children: [
                 // Pendientes
-                _buildTripsList(tripState, 'pending'),
+                _buildTripsList(tripsState, 'pending'),
                 // En Curso
-                _buildTripsList(tripState, 'in-progress'),
+                _buildTripsList(tripsState, 'in-progress'),
                 // Completados
-                _buildTripsList(tripState, 'completed'),
+                _buildTripsList(tripsState, 'completed'),
               ],
             ),
           ),
@@ -147,10 +137,10 @@ class _TripManagementPageState extends ConsumerState<TripManagementPage>
     );
   }
 
-  Widget _buildTripsList(TripState state, String category) {
+  Widget _buildTripsList(DriverTripsState state, String category) {
     print('🚗 DEBUG: Building trips list for category: $category');
     print('🚗 DEBUG: State - isLoading: ${state.isLoading}, error: ${state.error}');
-    print('🚗 DEBUG: Pending trips: ${state.pendingTrips.length}');
+    print('🚗 DEBUG: Active trips: ${state.activeTrips.length}');
     print('🚗 DEBUG: InProgress trips: ${state.inProgressTrips.length}');  
     print('🚗 DEBUG: Completed trips: ${state.completedTrips.length}');
     
@@ -259,6 +249,13 @@ class _TripManagementPageState extends ConsumerState<TripManagementPage>
               },
               showActions: true, // Mostrar acciones para conductores
               isDriverView: true, // Vista para conductores
+              onTripStarted: () {
+                // Cambiar a la pestaña "En Curso" después de un pequeño delay
+                print('🚗 DEBUG: Switching to In Progress tab');
+                Future.delayed(const Duration(milliseconds: 1500), () {
+                  _tabController.animateTo(1); // Índice 1 = "En Curso"
+                });
+              },
             ),
           );
         },
@@ -266,13 +263,13 @@ class _TripManagementPageState extends ConsumerState<TripManagementPage>
     );
   }
 
-  List<TripModel> _getTripsForCategory(TripState state, String category) {
+  List<TripModel> _getTripsForCategory(DriverTripsState state, String category) {
     print('🚗 DEBUG: Getting trips for category: $category');
     List<TripModel> trips;
     switch (category) {
       case 'pending':
-        trips = List.from(state.pendingTrips);
-        print('🚗 DEBUG: Found ${trips.length} pending trips');
+        trips = List.from(state.activeTrips);
+        print('🚗 DEBUG: Found ${trips.length} active trips');
         break;
       case 'in-progress':
         trips = List.from(state.inProgressTrips);
@@ -286,35 +283,12 @@ class _TripManagementPageState extends ConsumerState<TripManagementPage>
         return [];
     }
 
-    // Ordenar todos los viajes por fecha: primero hoy, luego por fecha de salida
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    // Los viajes ya vienen ordenados desde el DriverTripsProvider:
+    // 1. Viajes de hoy (ordenados por hora de salida)
+    // 2. Viajes futuros (ordenados por fecha de salida)
+    // 3. Viajes vencidos NO se incluyen
     
-    trips.sort((a, b) {
-      final dateA = DateTime(
-        a.departureTime.year,
-        a.departureTime.month,
-        a.departureTime.day,
-      );
-      final dateB = DateTime(
-        b.departureTime.year,
-        b.departureTime.month,
-        b.departureTime.day,
-      );
-      
-      // Primero los viajes de hoy
-      final isATodayTrip = dateA.isAtSameMomentAs(today);
-      final isBTodayTrip = dateB.isAtSameMomentAs(today);
-      
-      if (isATodayTrip && !isBTodayTrip) return -1;
-      if (!isATodayTrip && isBTodayTrip) return 1;
-      
-      // Luego ordenar por fecha de salida (más próximos primero)
-      return a.departureTime.compareTo(b.departureTime);
-    });
-
-    // Los filtros de fecha ya se aplicaron en el TripProvider
-    // Solo retornamos los viajes ordenados
+    print('🚗 DEBUG: Category $category has ${trips.length} trips');
     return trips;
   }
 
