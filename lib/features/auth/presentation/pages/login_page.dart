@@ -1,29 +1,31 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/utils/validators.dart';
 import '../state/auth_controller.dart';
-import 'dart:math' as math;
 
 /// Página de inicio de sesión ultra moderna con efectos glassmorphism
 class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> 
+class _LoginPageState extends ConsumerState<LoginPage>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   late AnimationController _mainAnimationController;
   late AnimationController _backgroundAnimationController;
   late AnimationController _floatingAnimationController;
-  
+
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
@@ -31,77 +33,57 @@ class _LoginPageState extends ConsumerState<LoginPage>
   late Animation<double> _floatingAnimation;
 
   @override
-  void initState() {
-    super.initState();
-    
-    // Controlador principal para entrada
-    _mainAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1800),
-      vsync: this,
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+    final authController = ref.read(authControllerProvider.notifier);
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Fondo animado con gradientes
+          _buildAnimatedBackground(),
+
+          // Elementos flotantes decorativos
+          _buildFloatingElements(),
+
+          // Contenido principal
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Container(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
+
+                    // Logo y título animado
+                    _buildAnimatedHeader(),
+
+                    const SizedBox(height: 50),
+
+                    // Formulario con efecto glassmorphism
+                    _buildGlassmorphismForm(authState, authController),
+
+                    const SizedBox(height: 30),
+
+                    // Enlaces y opciones adicionales
+                    _buildBottomActions(),
+
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
-    
-    // Controlador para efectos de fondo
-    _backgroundAnimationController = AnimationController(
-      duration: const Duration(seconds: 8),
-      vsync: this,
-    );
-    
-    // Controlador para elementos flotantes
-    _floatingAnimationController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    );
-    
-    _setupAnimations();
-    _startAnimations();
   }
-
-  void _setupAnimations() {
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOutQuart),
-    ));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
-    ));
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _mainAnimationController,
-      curve: const Interval(0.4, 1.0, curve: Curves.elasticOut),
-    ));
-
-    _backgroundAnimation = Tween<double>(
-      begin: 0.0,
-      end: 2 * math.pi,
-    ).animate(_backgroundAnimationController);
-
-    _floatingAnimation = Tween<double>(
-      begin: -10.0,
-      end: 10.0,
-    ).animate(CurvedAnimation(
-      parent: _floatingAnimationController,
-      curve: Curves.easeInOut,
-    ));
-  }
-
-  void _startAnimations() {
-    _mainAnimationController.forward();
-    _backgroundAnimationController.repeat();
-    _floatingAnimationController.repeat(reverse: true);
-  }
-
-
 
   @override
   void dispose() {
@@ -114,56 +96,29 @@ class _LoginPageState extends ConsumerState<LoginPage>
   }
 
   @override
-  Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final authController = ref.read(authControllerProvider.notifier);
-    
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Fondo animado con gradientes
-          _buildAnimatedBackground(),
-          
-          // Elementos flotantes decorativos
-          _buildFloatingElements(),
-          
-          // Contenido principal
-          SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Container(
-                constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height - 
-                            MediaQuery.of(context).padding.top,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    
-                    // Logo y título animado
-                    _buildAnimatedHeader(),
-                    
-                    const SizedBox(height: 50),
-                    
-                    // Formulario con efecto glassmorphism
-                    _buildGlassmorphismForm(authState, authController),
-                    
-                    const SizedBox(height: 30),
-                    
-                    // Enlaces y opciones adicionales
-                    _buildBottomActions(),
-                    
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+  void initState() {
+    super.initState();
+
+    // Controlador principal para entrada
+    _mainAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1800),
+      vsync: this,
     );
+
+    // Controlador para efectos de fondo
+    _backgroundAnimationController = AnimationController(
+      duration: const Duration(seconds: 8),
+      vsync: this,
+    );
+
+    // Controlador para elementos flotantes
+    _floatingAnimationController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+
+    _setupAnimations();
+    _startAnimations();
   }
 
   Widget _buildAnimatedBackground() {
@@ -176,11 +131,11 @@ class _LoginPageState extends ConsumerState<LoginPage>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               transform: GradientRotation(_backgroundAnimation.value * 0.1),
-              colors: [
-                const Color(0xFF667eea),
-                const Color(0xFF764ba2),
-                const Color(0xFFf093fb),
-                const Color(0xFFf5576c),
+              colors: const [
+                Color(0xFF667eea),
+                Color(0xFF764ba2),
+                Color(0xFFf093fb),
+                Color(0xFFf5576c),
               ],
               stops: const [0.0, 0.3, 0.7, 1.0],
             ),
@@ -199,54 +154,6 @@ class _LoginPageState extends ConsumerState<LoginPage>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildFloatingElements() {
-    return AnimatedBuilder(
-      animation: _floatingAnimation,
-      builder: (context, child) {
-        return Stack(
-          children: [
-            // Círculo flotante 1
-            Positioned(
-              top: 100 + _floatingAnimation.value,
-              right: 50,
-              child: _buildFloatingCircle(80, Colors.white.withOpacity(0.1)),
-            ),
-            // Círculo flotante 2
-            Positioned(
-              top: 300 - _floatingAnimation.value * 0.5,
-              left: 30,
-              child: _buildFloatingCircle(120, Colors.white.withOpacity(0.05)),
-            ),
-            // Círculo flotante 3
-            Positioned(
-              bottom: 200 + _floatingAnimation.value * 0.8,
-              right: 20,
-              child: _buildFloatingCircle(60, Colors.white.withOpacity(0.08)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildFloatingCircle(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.white.withOpacity(0.1),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
     );
   }
 
@@ -291,9 +198,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   color: Colors.white,
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Título
               Text(
                 'TaxiRuta',
@@ -310,9 +217,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               Text(
                 'Conecta • Viaja • Comparte',
                 style: TextStyle(
@@ -329,7 +236,205 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  Widget _buildGlassmorphismForm(AuthState authState, AuthController authController) {
+  Widget _buildBottomActions() {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Column(
+          children: [
+            // Divider con texto
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 1,
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'o continúa con',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    height: 1,
+                    color: Colors.white.withOpacity(0.3),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // DEBUG: Verificar que esta sección se renderiza
+            Container(
+              padding: const EdgeInsets.all(8),
+              color: Colors.red.withOpacity(0.5),
+              child: const Text(
+                'DEBUG: Esta sección debe ser visible',
+                style: TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Botón de Google Sign-In
+            _buildGoogleSignInButton(),
+
+            const SizedBox(height: 24),
+
+            // Botón de registro
+            TextButton(
+              onPressed: () => context.push('/register'),
+              child: RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 16,
+                  ),
+                  children: [
+                    const TextSpan(text: '¿No tienes cuenta? '),
+                    TextSpan(
+                      text: 'Regístrate',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            offset: const Offset(0, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingCircle(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFloatingElements() {
+    return AnimatedBuilder(
+      animation: _floatingAnimation,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Círculo flotante 1
+            Positioned(
+              top: 100 + _floatingAnimation.value,
+              right: 50,
+              child: _buildFloatingCircle(80, Colors.white.withOpacity(0.1)),
+            ),
+            // Círculo flotante 2
+            Positioned(
+              top: 300 - _floatingAnimation.value * 0.5,
+              left: 30,
+              child: _buildFloatingCircle(120, Colors.white.withOpacity(0.05)),
+            ),
+            // Círculo flotante 3
+            Positioned(
+              bottom: 200 + _floatingAnimation.value * 0.8,
+              right: 20,
+              child: _buildFloatingCircle(60, Colors.white.withOpacity(0.08)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGlassButton({
+    required VoidCallback? onPressed,
+    required bool isLoading,
+    required String text,
+  }) {
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.3),
+            Colors.white.withOpacity(0.2),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            alignment: Alignment.center,
+            child: isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    text,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassmorphismForm(
+      AuthState authState, AuthController authController) {
     return SlideTransition(
       position: _slideAnimation,
       child: FadeTransition(
@@ -379,11 +484,12 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 // Indicador de datos de prueba
                 Container(
                   margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -399,9 +505,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
                     textAlign: TextAlign.center,
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Campo Email
                 _buildGlassTextField(
                   controller: _emailController,
@@ -409,9 +515,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   icon: Icons.email_outlined,
                   validator: Validators.validateEmail,
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Campo Contraseña
                 _buildGlassTextField(
                   controller: _passwordController,
@@ -420,9 +526,9 @@ class _LoginPageState extends ConsumerState<LoginPage>
                   isPassword: true,
                   validator: Validators.validatePassword,
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Olvidaste tu contraseña
                 Align(
                   alignment: Alignment.centerRight,
@@ -439,18 +545,18 @@ class _LoginPageState extends ConsumerState<LoginPage>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Botón de login con efecto
                 _buildGlassButton(
-                  onPressed: authState.status == AuthStatus.loading 
-                    ? null 
-                    : () => _handleLogin(authController),
+                  onPressed: authState.status == AuthStatus.loading
+                      ? null
+                      : () => _handleLogin(authController),
                   isLoading: authState.status == AuthStatus.loading,
                   text: 'Iniciar Sesión',
                 ),
-                
+
                 if (authState.errorMessage != null) ...[
                   const SizedBox(height: 16),
                   Container(
@@ -526,151 +632,99 @@ class _LoginPageState extends ConsumerState<LoginPage>
     );
   }
 
-  Widget _buildGlassButton({
-    required VoidCallback? onPressed,
-    required bool isLoading,
-    required String text,
-  }) {
-    return Container(
-      height: 56,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.3),
-            Colors.white.withOpacity(0.2),
-          ],
-        ),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.4),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+  Widget _buildGoogleSignInButton() {
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.status == AuthStatus.loading;
+
+    return ElevatedButton.icon(
+      onPressed: isLoading ? null : () => _handleGoogleSignIn(),
+      icon: const Icon(Icons.login, color: Colors.blue),
+      label: const Text(
+        'Continuar con Google',
+        style: TextStyle(fontSize: 16, color: Colors.blue),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            alignment: Alignment.center,
-            child: isLoading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(
-                  text,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-          ),
         ),
       ),
     );
   }
 
-  Widget _buildBottomActions() {
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Column(
-          children: [
-            // Divider con texto
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'o',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    height: 1,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Botón de registro
-            TextButton(
-              onPressed: () => context.push('/register'),
-              child: RichText(
-                text: TextSpan(
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 16,
-                  ),
-                  children: [
-                    const TextSpan(text: '¿No tienes cuenta? '),
-                    TextSpan(
-                      text: 'Regístrate',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.3),
-                            offset: const Offset(0, 1),
-                            blurRadius: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void _handleGoogleSignIn() async {
+    // Haptic feedback
+    HapticFeedback.lightImpact();
+
+    final controller = ref.read(authControllerProvider.notifier);
+    await controller.loginWithGoogle();
+
+    final authState = ref.read(authControllerProvider);
+    if (authState.status == AuthStatus.authenticated && mounted) {
+      context.go('/trips');
+    }
   }
 
   void _handleLogin(AuthController controller) async {
     if (_formKey.currentState?.validate() ?? false) {
       // Haptic feedback
       HapticFeedback.lightImpact();
-      
+
       await controller.login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      
+
       final authState = ref.read(authControllerProvider);
       if (authState.status == AuthStatus.authenticated && mounted) {
         context.go('/trips');
       }
     }
+  }
+
+  void _setupAnimations() {
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _mainAnimationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOutQuart),
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _mainAnimationController,
+      curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _mainAnimationController,
+      curve: const Interval(0.4, 1.0, curve: Curves.elasticOut),
+    ));
+
+    _backgroundAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * math.pi,
+    ).animate(_backgroundAnimationController);
+
+    _floatingAnimation = Tween<double>(
+      begin: -10.0,
+      end: 10.0,
+    ).animate(CurvedAnimation(
+      parent: _floatingAnimationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  void _startAnimations() {
+    _mainAnimationController.forward();
+    _backgroundAnimationController.repeat();
+    _floatingAnimationController.repeat(reverse: true);
   }
 }
