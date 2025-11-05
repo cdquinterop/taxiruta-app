@@ -7,6 +7,8 @@ import '../../../../providers/driver_profile_provider.dart';
 import '../../../../models/vehicle_models.dart';
 import '../../../../models/change_password_models.dart';
 import '../../../auth/presentation/state/auth_provider.dart';
+import '../../../../providers/group_provider.dart';
+import '../../../../models/group_model.dart';
 
 /// Pantalla de perfil del conductor con mejor UX
 class DriverProfilePage extends ConsumerStatefulWidget {
@@ -22,6 +24,7 @@ class _DriverProfilePageState extends ConsumerState<DriverProfilePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(driverProfileNotifierProvider.notifier).loadDriverData();
+      ref.read(groupProvider.notifier).loadCurrentGroup();
     });
   }
 
@@ -121,6 +124,8 @@ class _DriverProfilePageState extends ConsumerState<DriverProfilePage> {
           _buildProfileHeader(profile),
           const SizedBox(height: 24),
           _buildStatsCards(profile),
+          const SizedBox(height: 24),
+          _buildGroupSection(),
           const SizedBox(height: 24),
           _buildPersonalInfoSection(profile),
           const SizedBox(height: 24),
@@ -724,6 +729,775 @@ class _DriverProfilePageState extends ConsumerState<DriverProfilePage> {
             child: const Text('Cerrar Sesión'),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Sección de gestión de grupos
+  Widget _buildGroupSection() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final groupState = ref.watch(groupProvider);
+        final currentGroup = groupState.currentGroup;
+        
+        print('🔍 GROUP_SECTION: Building with currentGroup: ${currentGroup?.code ?? 'null'}');
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.groups, color: Colors.blue[600]),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Grupo de Conductores',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (currentGroup != null)
+                    TextButton.icon(
+                      onPressed: () => _showGroupActionsDialog(context, ref, currentGroup),
+                      icon: const Icon(Icons.more_vert, size: 16),
+                      label: const Text('Opciones'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue[600],
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (groupState.isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                )
+              else if (groupState.error != null)
+                _buildErrorWidget(groupState.error!, ref)
+              else if (currentGroup != null)
+                _buildGroupInfoWidget(currentGroup)
+              else
+                _buildNoGroupWidget(ref),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGroupInfoWidget(GroupModel group) {
+    return Column(
+      children: [
+        _buildGroupInfoRow('Código del Grupo', group.code, Icons.qr_code),
+        _buildGroupInfoRow('Nombre del Grupo', group.name, Icons.group),
+        if (group.description != null && group.description!.isNotEmpty)
+          _buildGroupInfoRow('Descripción', group.description!, Icons.description),
+        _buildGroupInfoRow('Miembros', '${group.driversCount} conductores', Icons.people),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.green[200]!),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green[600], size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Miembro activo',
+                      style: TextStyle(
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNoGroupWidget(WidgetRef ref) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.orange[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.orange[200]!),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.group_add, color: Colors.orange[600], size: 32),
+              const SizedBox(height: 8),
+              Text(
+                'No tienes un grupo asignado',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Para unirte a un grupo, necesitas el código que te proporcionará tu supervisor o administrador.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.orange[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _showJoinGroupDialog(context, ref),
+            icon: const Icon(Icons.qr_code, size: 20),
+            label: const Text('Ingresar Código de Grupo'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[600],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorWidget(String error, WidgetRef ref) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.red[200]!),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red[600], size: 32),
+              const SizedBox(height: 8),
+              Text(
+                'Error al cargar grupo',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.red[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                error,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: () {
+            ref.read(groupProvider.notifier).clearError();
+            ref.read(groupProvider.notifier).loadCurrentGroup();
+          },
+          icon: const Icon(Icons.refresh, size: 16),
+          label: const Text('Reintentar'),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.blue[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGroupInfoRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey[600]),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showJoinGroupDialog(BuildContext context, WidgetRef ref) {
+    final codeController = TextEditingController();
+    bool isJoining = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.group_add, color: Colors.blue[600]),
+              const SizedBox(width: 8),
+              const Text('Unirse a un Grupo'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info, color: Colors.blue[600], size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Solicita el código a tu supervisor o administrador',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Código del Grupo:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: codeController,
+                decoration: const InputDecoration(
+                  labelText: 'Ingresa el código',
+                  hintText: 'Ej: NORTH01',
+                  prefixIcon: Icon(Icons.qr_code),
+                  border: OutlineInputBorder(),
+                  helperText: 'El código debe tener entre 3 y 15 caracteres',
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El código es requerido';
+                  }
+                  if (value.trim().length < 3) {
+                    return 'El código debe tener al menos 3 caracteres';
+                  }
+                  if (value.trim().contains(' ')) {
+                    return 'El código no puede contener espacios';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isJoining ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: isJoining ? null : () async {
+                final code = codeController.text.trim();
+                
+                // Validaciones del código
+                if (code.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('Por favor ingresa el código del grupo'),
+                        ],
+                      ),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                
+                if (code.length < 3) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('El código debe tener al menos 3 caracteres'),
+                        ],
+                      ),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                
+                if (code.contains(' ')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text('El código no puede contener espacios'),
+                        ],
+                      ),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+
+                setState(() => isJoining = true);
+                
+                try {
+                  final success = await ref.read(groupProvider.notifier)
+                      .joinGroup(code);
+                  
+                  setState(() => isJoining = false);
+                  
+                  if (success) {
+                    Navigator.of(context).pop();
+                    
+                    // Refrescar el estado del grupo para mostrar la nueva información
+                    await ref.read(groupProvider.notifier).refresh();
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.white),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text('¡Te has unido al grupo "$code" exitosamente!'),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: Colors.green,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  } else {
+                    // El provider devolvió false, verificar si hay error en el estado
+                    final groupState = ref.read(groupProvider);
+                    if (groupState.error != null) {
+                      String errorString = groupState.error!.toLowerCase();
+                      
+                      if (errorString.contains('no se encontró') || 
+                          errorString.contains('404') || 
+                          errorString.contains('resource_not_found')) {
+                        _showErrorDialog(
+                          context,
+                          'Código Incorrecto',
+                          'El código "$code" no existe o no está activo.\n\nPor favor:\n• Verifica que el código esté escrito correctamente\n• Consulta con tu supervisor el código correcto\n• Asegúrate de que el grupo esté activo',
+                          icon: Icons.search_off,
+                          color: Colors.orange,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.error, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(groupState.error!)),
+                              ],
+                            ),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(Icons.error, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text('Error desconocido al unirse al grupo'),
+                            ],
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  setState(() => isJoining = false);
+                  
+                  // Determinar el mensaje de error específico
+                  String errorMessage = 'Error al unirse al grupo';
+                  Color backgroundColor = Colors.red;
+                  IconData iconData = Icons.error;
+                  
+                  String errorString = e.toString().toLowerCase();
+                  
+                  if (errorString.contains('no se encontró un grupo con el código') || 
+                      errorString.contains('404') || 
+                      errorString.contains('código de grupo inválido') ||
+                      errorString.contains('resource_not_found')) {
+                    // Mostrar diálogo específico para código incorrecto
+                    _showErrorDialog(
+                      context,
+                      'Código Incorrecto',
+                      'El código "$code" no existe o no está activo.\n\nPor favor:\n• Verifica que el código esté escrito correctamente\n• Consulta con tu supervisor el código correcto\n• Asegúrate de que el grupo esté activo',
+                      icon: Icons.search_off,
+                      color: Colors.orange,
+                    );
+                    return; // No mostrar SnackBar adicional
+                  } else if (errorString.contains('ya perteneces') || errorString.contains('409')) {
+                    errorMessage = 'Ya perteneces a este grupo';
+                    backgroundColor = Colors.blue;
+                    iconData = Icons.info;
+                  } else if (errorString.contains('solo los conductores') || errorString.contains('403')) {
+                    errorMessage = 'No tienes permisos para unirte a este grupo';
+                  } else if (errorString.contains('token inválido') || errorString.contains('401')) {
+                    _showErrorDialog(
+                      context,
+                      'Sesión Expirada',
+                      'Tu sesión ha expirado. Por favor cierra e inicia sesión nuevamente.',
+                      icon: Icons.access_time,
+                      color: Colors.red,
+                    );
+                    return;
+                  } else if (errorString.contains('error de conexión')) {
+                    errorMessage = 'Error de conexión. Verifica tu internet';
+                  }
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(iconData, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  errorMessage,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                if (errorString.contains('código') && !errorString.contains('ya perteneces'))
+                                  const Text(
+                                    'Verifica el código con tu supervisor',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: backgroundColor,
+                      duration: const Duration(seconds: 5),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+                foregroundColor: Colors.white,
+              ),
+              child: isJoining
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text('Unirse'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showGroupActionsDialog(BuildContext context, WidgetRef ref, GroupModel group) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.settings, color: Colors.blue[600]),
+            const SizedBox(width: 8),
+            const Text('Opciones del Grupo'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Grupo: ${group.name} (${group.code})',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '¿Deseas salir de este grupo?',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Si sales del grupo, perderás acceso a los viajes compartidos.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showLeaveGroupConfirmation(context, ref, group);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red[600],
+            ),
+            child: const Text('Salir del Grupo'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String title, String message, {IconData icon = Icons.error, Color color = Colors.red}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Container(
+          constraints: const BoxConstraints(maxWidth: 300),
+          child: Text(
+            message,
+            style: const TextStyle(fontSize: 14, height: 1.4),
+          ),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: color,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Entendido',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLeaveGroupConfirmation(BuildContext context, WidgetRef ref, GroupModel group) {
+    bool isLeaving = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.exit_to_app, color: Colors.red[600]),
+              const SizedBox(width: 8),
+              const Text('Salir del Grupo'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '¿Estás seguro de que quieres salir del grupo "${group.name}"?',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Perderás acceso a los viajes compartidos del grupo.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isLeaving ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: isLeaving ? null : () async {
+                setState(() => isLeaving = true);
+                
+                try {
+                  final success = await ref.read(groupProvider.notifier).leaveGroup();
+                  
+                  if (success) {
+                    Navigator.of(context).pop();
+                    
+                    // Refrescar completamente el estado del grupo para asegurar la actualización
+                    await ref.read(groupProvider.notifier).refresh();
+                    
+                    // Pequeña demora para asegurar que la UI se actualice
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.white),
+                            const SizedBox(width: 8),
+                            Text('Has salido del grupo "${group.name}" exitosamente'),
+                          ],
+                        ),
+                        backgroundColor: Colors.orange,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  setState(() => isLeaving = false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.error, color: Colors.white),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text('Error al salir del grupo. Inténtalo de nuevo.'),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[600],
+                foregroundColor: Colors.white,
+              ),
+              child: isLeaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text('Salir del Grupo'),
+            ),
+          ],
+        ),
       ),
     );
   }

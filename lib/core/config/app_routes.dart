@@ -13,6 +13,7 @@ import '../../features/driver/presentation/pages/driver_trips_page.dart';
 import '../../features/driver/presentation/pages/driver_bookings_page.dart';
 import '../../features/driver/presentation/pages/driver_profile_page_improved.dart';
 import '../../features/driver/presentation/pages/create_trip_page.dart';
+import '../../features/driver/presentation/pages/group_trips_page.dart';
 import '../../features/trips/presentation/pages/trip_management_page.dart';
 import '../../features/trips/presentation/pages/all_trips_page.dart';
 import '../../features/trips/presentation/pages/edit_trip_page.dart';
@@ -40,6 +41,7 @@ class AppRoutes {
   static const String driverBookings = '/driver/bookings';
   static const String driverProfile = '/driver/profile';
   static const String driverCreateTrip = '/driver/create-trip';
+  static const String driverGroupTrips = '/driver/group-trips';
   static const String tripManagement = '/trips/management';
   static const String allTrips = '/trips/all';
   static const String editTrip = '/trips/edit';
@@ -135,6 +137,13 @@ class AppRoutes {
         name: 'driver-profile',
         builder: (context, state) => const MainNavigationPage(
           child: DriverProfilePage(),
+        ),
+      ),
+      GoRoute(
+        path: driverGroupTrips,
+        name: 'driver-group-trips',
+        builder: (context, state) => const MainNavigationPage(
+          child: GroupTripsPage(),
         ),
       ),
       GoRoute(

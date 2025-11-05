@@ -534,14 +534,12 @@ class _DriverDashboardPageState extends ConsumerState<DriverDashboardPage> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
-                icon: Icons.notifications,
-                title: 'Notificaciones',
-                subtitle: 'Ver alertas',
+                icon: Icons.group,
+                title: 'Compañeros',
+                subtitle: 'Viajes del equipo',
                 color: Colors.orange,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Navegando a notificaciones...')),
-                  );
+                  context.push(AppRoutes.driverGroupTrips);
                 },
               ),
             ),

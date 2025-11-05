@@ -28,7 +28,6 @@ dependencies:
 
   # Secure storage
   flutter_secure_storage: ^9.2.2
-
   # UI/UX
   cupertino_icons: ^1.0.8
   flutter_screenutil: ^5.9.3
