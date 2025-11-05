@@ -80,6 +80,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<User>> loginUser({
     required String email,
     required String password,
+    bool rememberMe = true,
   }) async {
     try {
       print('🔐 LOGIN: Iniciando login para email: $email');
@@ -158,9 +159,19 @@ class AuthRepositoryImpl implements AuthRepository {
         // Guardar token de la nueva estructura
         final token = dataSection['token'];
         if (token != null) {
-          await _storage.write(key: AppConstants.tokenKey, value: token);
-          print(
-              '✅ LOGIN: Token guardado exitosamente con clave: ${AppConstants.tokenKey}');
+          // Guardar token según la preferencia de "recordarme"
+          if (rememberMe) {
+            // Almacenamiento persistente
+            await _storage.write(key: AppConstants.tokenKey, value: token);
+            await _storage.write(key: AppConstants.rememberMeKey, value: 'true');
+            print('✅ LOGIN: Token guardado persistentemente');
+          } else {
+            // Almacenamiento temporal (solo para esta sesión)
+            await _storage.write(key: AppConstants.tokenKey, value: token);
+            await _storage.write(key: AppConstants.rememberMeKey, value: 'false');
+            print('✅ LOGIN: Token guardado temporalmente');
+          }
+          print('✅ LOGIN: Token guardado exitosamente con clave: ${AppConstants.tokenKey}');
         } else {
           print('⚠️ LOGIN: ADVERTENCIA - No se encontró token en la respuesta');
         }

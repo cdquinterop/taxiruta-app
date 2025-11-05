@@ -473,6 +473,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authProvider.notifier).login(
             _emailController.text.trim(),
             _passwordController.text.trim(),
+            rememberMe: _rememberMe,
           );
 
       // Pequeño delay para asegurar que el estado se actualize

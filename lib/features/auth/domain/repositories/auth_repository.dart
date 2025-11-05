@@ -19,6 +19,7 @@ abstract class AuthRepository {
   Future<Result<User>> loginUser({
     required String email,
     required String password,
+    bool rememberMe = true,
   });
 
   /// Iniciar sesión con Google
