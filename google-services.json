@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "497642805847",
+    "project_id": "taxi-ruta-64097",
+    "storage_bucket": "taxi-ruta-64097.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:497642805847:android:929f4af313cae7034c6112",
+        "android_client_info": {
+          "package_name": "com.drivecompany"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "497642805847-72gff54l0ffhnhfcd77ruhq6ltrc7pk3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.drivecompany",
+            "certificate_hash": "331299143ea86ccec8714a2a9eaba49a4d0c0ef3"
+          }
+        },
+        {
+          "client_id": "497642805847-9o5pg2t5h9sjklc6ft3274i9jope5gu8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN946JFnuhMMxCummngDS1IYB0UiZMQOo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "497642805847-9o5pg2t5h9sjklc6ft3274i9jope5gu8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "497642805847-aidsu6mtmaihittce00jtrb977up6bqn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.taxiruta.taxiruta"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:497642805847:android:d315b07c2f6a5f554c6112",
+        "android_client_info": {
+          "package_name": "com.taxiruta.taxiruta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "497642805847-j8u5d063tv8ivrjbp2utn2f832gfrlpl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.taxiruta.taxiruta",
+            "certificate_hash": "331299143ea86ccec8714a2a9eaba49a4d0c0ef3"
+          }
+        },
+        {
+          "client_id": "497642805847-9o5pg2t5h9sjklc6ft3274i9jope5gu8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCN946JFnuhMMxCummngDS1IYB0UiZMQOo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "497642805847-9o5pg2t5h9sjklc6ft3274i9jope5gu8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "497642805847-aidsu6mtmaihittce00jtrb977up6bqn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.taxiruta.taxiruta"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

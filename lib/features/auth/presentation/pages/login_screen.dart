@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../state/auth_provider.dart';
+
 import '../../../../shared/widgets/custom_card.dart';
+import '../state/auth_provider.dart';
 import 'register_screen.dart';
 
 /// Pantalla de login con validación de credenciales
@@ -17,16 +18,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   bool _rememberMe = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,11 +34,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              
+
               // Logo y título
               _buildHeader(context),
               const SizedBox(height: 40),
-              
+
               // Formulario de login
               CustomCard(
                 backgroundColor: Colors.white,
@@ -55,32 +49,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       Text(
                         'Iniciar Sesión',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Campo de email
                       _buildEmailField(),
                       const SizedBox(height: 16),
-                      
+
                       // Campo de contraseña
                       _buildPasswordField(),
                       const SizedBox(height: 16),
-                      
+
                       // Recordar sesión y forgot password
                       _buildOptionsRow(context),
                       const SizedBox(height: 24),
-                      
+
                       // Mostrar error si existe
                       if (authState.error != null) ...[
                         _buildErrorMessage(authState.error!),
                         const SizedBox(height: 16),
                       ],
-                      
+
                       // Botón de login
                       _buildLoginButton(context, authState.isLoading),
                     ],
@@ -88,12 +83,146 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
+              // Divisor con texto
+              _buildDivider(),
+              const SizedBox(height: 24),
+
+              // Botón de Google Sign-In
+              _buildGoogleSignInButton(context, isLoading: authState.isLoading),
+              const SizedBox(height: 24),
+
               // Link para registro
               _buildRegisterLink(context),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  /// Construye el divisor con texto "o continúa con"
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            color: Colors.white.withOpacity(0.5),
+            thickness: 1,
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'o continúa con',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Divider(
+            color: Colors.white.withOpacity(0.5),
+            thickness: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Construye el campo de email
+  Widget _buildEmailField() {
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.next,
+      decoration: InputDecoration(
+        labelText: 'Correo electrónico',
+        hintText: 'tu@email.com',
+        prefixIcon: const Icon(Icons.email_outlined),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Por favor ingresa tu email';
+        }
+        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+          return 'Por favor ingresa un email válido';
+        }
+        return null;
+      },
+    );
+  }
+
+  /// Construye el mensaje de error
+  Widget _buildErrorMessage(String error) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red[600], size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              error,
+              style: TextStyle(
+                color: Colors.red[600],
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye el botón de Google Sign-In
+  Widget _buildGoogleSignInButton(BuildContext context,
+      {required bool isLoading}) {
+    return ElevatedButton.icon(
+      onPressed: isLoading ? null : _handleGoogleSignIn,
+      icon: Image.network(
+        'https://www.google.com/favicon.ico',
+        width: 24,
+        height: 24,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.g_mobiledata,
+              size: 32, color: Color(0xFF4285F4));
+        },
+      ),
+      label: const Text(
+        'Continuar con Google',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 2,
       ),
     );
   }
@@ -140,31 +269,78 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  /// Construye el campo de email
-  Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: 'Correo electrónico',
-        hintText: 'tu@email.com',
-        prefixIcon: const Icon(Icons.email_outlined),
-        border: OutlineInputBorder(
+  /// Construye el botón de login
+  Widget _buildLoginButton(BuildContext context, bool isLoading) {
+    return ElevatedButton(
+      onPressed: isLoading ? null : _handleLogin,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        filled: true,
-        fillColor: Colors.grey[50],
+        elevation: 2,
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Por favor ingresa tu email';
-        }
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Por favor ingresa un email válido';
-        }
-        return null;
-      },
+      child: isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : const Text(
+              'Iniciar Sesión',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+    );
+  }
+
+  /// Construye la fila de opciones (recordar y forgot password)
+  Widget _buildOptionsRow(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Row(
+            children: [
+              Checkbox(
+                value: _rememberMe,
+                onChanged: (value) {
+                  setState(() {
+                    _rememberMe = value ?? false;
+                  });
+                },
+              ),
+              const Flexible(
+                child: Text('Recordarme'),
+              ),
+            ],
+          ),
+        ),
+        Flexible(
+          child: TextButton(
+            onPressed: () {
+              // TODO: Implementar forgot password
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Función de recuperación de contraseña próximamente'),
+                ),
+              );
+            },
+            child: const Text(
+              '¿Olvidaste tu contraseña?',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -207,114 +383,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  /// Construye la fila de opciones (recordar y forgot password)
-  Widget _buildOptionsRow(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Flexible(
-          child: Row(
-            children: [
-              Checkbox(
-                value: _rememberMe,
-                onChanged: (value) {
-                  setState(() {
-                    _rememberMe = value ?? false;
-                  });
-                },
-              ),
-              const Flexible(
-                child: Text('Recordarme'),
-              ),
-            ],
-          ),
-        ),
-        Flexible(
-          child: TextButton(
-            onPressed: () {
-              // TODO: Implementar forgot password
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Función de recuperación de contraseña próximamente'),
-                ),
-              );
-            },
-            child: const Text(
-              '¿Olvidaste tu contraseña?',
-              style: TextStyle(fontSize: 12),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Construye el mensaje de error
-  Widget _buildErrorMessage(String error) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.red[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red[200]!),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Colors.red[600], size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              error,
-              style: TextStyle(
-                color: Colors.red[600],
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Construye el botón de login
-  Widget _buildLoginButton(BuildContext context, bool isLoading) {
-    return ElevatedButton(
-      onPressed: isLoading ? null : _handleLogin,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-      ),
-      child: isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-          : const Text(
-              'Iniciar Sesión',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-    );
-  }
-
   /// Construye el divisor
   /// Construye el link para registro
   Widget _buildRegisterLink(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
+        const Text(
           '¿No tienes cuenta? ',
           style: TextStyle(color: Colors.white70),
         ),
@@ -338,27 +413,78 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  /// Maneja el proceso de Google Sign-In
+  void _handleGoogleSignIn() async {
+    // Limpiar errores previos
+    ref.read(authProvider.notifier).clearError();
+
+    try {
+      await ref.read(authProvider.notifier).loginWithGoogle();
+
+      // Pequeño delay para asegurar que el estado se actualize
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Verificar si el login fue exitoso
+      final authState = ref.read(authProvider);
+      print('🔍 LOGIN SCREEN (Google): Estado después del login:');
+      print('  isAuthenticated: ${authState.isAuthenticated}');
+      print('  user: ${authState.user?.fullName}');
+      print('  error: ${authState.error}');
+
+      if (authState.isAuthenticated && authState.user != null) {
+        final user = authState.user!;
+        // Navegar según el rol del usuario
+        String route;
+        if (user.isDriver) {
+          route = '/driver/dashboard';
+          print(
+              '✅ LOGIN SCREEN (Google): Usuario conductor - Navegando a $route');
+        } else {
+          route = '/passenger/dashboard';
+          print(
+              '✅ LOGIN SCREEN (Google): Usuario pasajero - Navegando a $route');
+        }
+
+        if (mounted) {
+          context.go(route);
+        }
+      } else if (authState.error != null) {
+        print('❌ LOGIN SCREEN (Google): Error de login: ${authState.error}');
+      }
+    } catch (e) {
+      print('❌ LOGIN SCREEN (Google): Excepción: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al iniciar sesión con Google: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   /// Maneja el proceso de login
   void _handleLogin() async {
     // Limpiar errores previos
     ref.read(authProvider.notifier).clearError();
-    
+
     if (_formKey.currentState!.validate()) {
       await ref.read(authProvider.notifier).login(
             _emailController.text.trim(),
             _passwordController.text.trim(),
           );
-      
+
       // Pequeño delay para asegurar que el estado se actualize
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // Verificar si el login fue exitoso
       final authState = ref.read(authProvider);
       print('🔍 LOGIN SCREEN: Estado después del login:');
       print('  isAuthenticated: ${authState.isAuthenticated}');
       print('  user: ${authState.user?.fullName}');
       print('  error: ${authState.error}');
-      
+
       if (authState.isAuthenticated && authState.user != null) {
         final user = authState.user!;
         // Navegar según el rol del usuario
@@ -370,7 +496,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           route = '/passenger/dashboard';
           print('✅ LOGIN SCREEN: Usuario pasajero - Navegando a $route');
         }
-        
+
         if (mounted) {
           context.go(route);
         }

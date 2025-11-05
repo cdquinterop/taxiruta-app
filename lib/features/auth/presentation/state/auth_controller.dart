@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../domain/entities/user.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../domain/usecases/register_user.dart';
-import '../../domain/usecases/login_user.dart';
-import '../../domain/usecases/logout_user.dart';
-import '../../data/repositories/auth_repository_impl.dart';
+
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/api_client.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../../domain/usecases/login_user.dart';
+import '../../domain/usecases/login_with_google.dart';
+import '../../domain/usecases/logout_user.dart';
+import '../../domain/usecases/register_user.dart';
 
 /// Estado de autenticación
 enum AuthStatus {
@@ -55,16 +57,19 @@ class AuthState {
 class AuthController extends StateNotifier<AuthState> {
   final RegisterUser _registerUser;
   final LoginUser _loginUser;
+  final LoginWithGoogle _loginWithGoogle;
   final LogoutUser _logoutUser;
   final AuthRepository _repository;
 
   AuthController({
     required RegisterUser registerUser,
     required LoginUser loginUser,
+    required LoginWithGoogle loginWithGoogle,
     required LogoutUser logoutUser,
     required AuthRepository repository,
   })  : _registerUser = registerUser,
         _loginUser = loginUser,
+        _loginWithGoogle = loginWithGoogle,
         _logoutUser = logoutUser,
         _repository = repository,
         super(const AuthState());
@@ -146,6 +151,31 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  /// Iniciar sesión con Google
+  Future<void> loginWithGoogle() async {
+    print('🎯 AUTH_CONTROLLER: Iniciando login con Google');
+    state = state.copyWith(status: AuthStatus.loading);
+
+    final result = await _loginWithGoogle.call();
+
+    print('🎯 AUTH_CONTROLLER: Resultado del login con Google:');
+    print('   - Data: ${result.data}');
+    print('   - Failure: ${result.failure}');
+
+    if (result.data != null) {
+      print('✅ AUTH_CONTROLLER: Login con Google exitoso');
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: result.data,
+        errorMessage: null,
+        fieldErrors: null,
+      );
+    } else if (result.failure != null) {
+      print('❌ AUTH_CONTROLLER: Login con Google falló');
+      _handleFailure(result.failure!);
+    }
+  }
+
   /// Cerrar sesión
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading);
@@ -177,7 +207,7 @@ class AuthController extends StateNotifier<AuthState> {
     print('🚨 AUTH_CONTROLLER: Manejando fallo:');
     print('   - Tipo: ${failure.runtimeType}');
     print('   - Mensaje: ${failure.message}');
-    
+
     if (failure is ValidationFailure) {
       print('   - Errores de campo: ${failure.fieldErrors}');
       state = state.copyWith(
@@ -192,8 +222,9 @@ class AuthController extends StateNotifier<AuthState> {
         fieldErrors: null,
       );
     }
-    
-    print('🚨 AUTH_CONTROLLER: Estado actualizado con error: ${state.errorMessage}');
+
+    print(
+        '🚨 AUTH_CONTROLLER: Estado actualizado con error: ${state.errorMessage}');
   }
 }
 
@@ -215,15 +246,21 @@ final loginUserProvider = Provider<LoginUser>((ref) {
   return LoginUser(ref.read(authRepositoryProvider));
 });
 
+final loginWithGoogleProvider = Provider<LoginWithGoogle>((ref) {
+  return LoginWithGoogle(ref.read(authRepositoryProvider));
+});
+
 final logoutUserProvider = Provider<LogoutUser>((ref) {
   return LogoutUser(ref.read(authRepositoryProvider));
 });
 
 /// Provider del controlador de autenticación
-final authControllerProvider = StateNotifierProvider<AuthController, AuthState>((ref) {
+final authControllerProvider =
+    StateNotifierProvider<AuthController, AuthState>((ref) {
   return AuthController(
     registerUser: ref.read(registerUserProvider),
     loginUser: ref.read(loginUserProvider),
+    loginWithGoogle: ref.read(loginWithGoogleProvider),
     logoutUser: ref.read(logoutUserProvider),
     repository: ref.read(authRepositoryProvider),
   );
