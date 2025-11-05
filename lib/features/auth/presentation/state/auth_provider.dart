@@ -63,13 +63,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Login del usuario
-  Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password, {bool rememberMe = true}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
       final result = await _authRepository.loginUser(
         email: email,
         password: password,
+        rememberMe: rememberMe,
       );
 
       if (result.failure != null) {
@@ -152,9 +153,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Logout del usuario
+  /// Logout del usuario (limpia completamente la sesión)
   Future<void> logout() async {
-    await _logout();
+    print('👤 AUTH: Logout explícito del usuario');
+    await _logout(clearRememberMe: true);
+  }
+
+  /// Limpia solo sesión temporal (mantiene preferencias)
+  Future<void> clearTemporarySession() async {
+    print('🔄 AUTH: Limpiando sesión temporal');
+    await _logout(clearRememberMe: false);
   }
 
   /// Actualizar perfil del usuario
@@ -166,7 +174,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: user);
     } catch (e) {
       // Si falla, probablemente el token expiró
-      await _logout();
+      await _logout(clearRememberMe: false);
     }
   }
 
@@ -278,28 +286,57 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       final token = await _secureStorage.read(key: AppConstants.tokenKey);
+      final rememberMe = await _secureStorage.read(key: AppConstants.rememberMeKey);
+      
+      print('🔍 AUTH: Checking auth status - Token exists: ${token != null}, RememberMe: $rememberMe');
+      
       if (token != null && token.isNotEmpty) {
-        final user = await _authRepository.getCurrentUser();
-        state = state.copyWith(
-          user: user,
-          isAuthenticated: true,
-          isLoading: false,
-        );
+        try {
+          final user = await _authRepository.getCurrentUser();
+          if (user != null) {
+            state = state.copyWith(
+              user: user,
+              isAuthenticated: true,
+              isLoading: false,
+            );
+            print('✅ AUTH: Usuario autenticado restaurado: ${user.fullName}');
+            print('ℹ️ AUTH: RememberMe setting: $rememberMe');
+          } else {
+            print('❌ AUTH: No se pudo obtener el usuario, limpiando sesión');
+            await _logout(clearRememberMe: false);
+          }
+        } catch (e) {
+          print('❌ AUTH: Token inválido o expirado, limpiando sesión: $e');
+          await _logout(clearRememberMe: false);
+        }
       } else {
+        print('ℹ️ AUTH: No hay token guardado');
         state = state.copyWith(
           isAuthenticated: false,
           isLoading: false,
         );
       }
     } catch (e) {
-      // Token inválido o expirado
-      await _logout();
+      print('❌ AUTH: Error verificando autenticación: $e');
+      // En caso de error, limpiar estado pero no la sesión almacenada
+      state = state.copyWith(
+        isAuthenticated: false,
+        isLoading: false,
+      );
     }
   }
 
-  Future<void> _logout() async {
+  Future<void> _logout({bool clearRememberMe = true}) async {
     await _secureStorage.delete(key: AppConstants.tokenKey);
     await _secureStorage.delete(key: AppConstants.userDataKey);
+    
+    // Solo limpiar rememberMe si se especifica (logout explícito del usuario)
+    if (clearRememberMe) {
+      await _secureStorage.delete(key: AppConstants.rememberMeKey);
+      print('🗑️ AUTH: Logout completo - preferencias limpiadas');
+    } else {
+      print('🔄 AUTH: Logout temporal - manteniendo preferencias');
+    }
 
     state = const AuthState(
       isAuthenticated: false,

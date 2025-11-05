@@ -12,6 +12,7 @@ class AppConstants {
   static const String refreshTokenKey = 'refresh_token';
   static const String userIdKey = 'user_id';
   static const String userDataKey = 'user_data';
+  static const String rememberMeKey = 'remember_me';
   
   // Configuración de la aplicación
   static const String appName = 'TaxiRuta';

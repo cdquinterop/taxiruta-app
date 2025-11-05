@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_routes.dart';
+import 'core/lifecycle/app_lifecycle_handler.dart';
 import 'firebase_options.dart';
 import 'shared/theme/app_theme.dart';
 
@@ -48,21 +49,23 @@ class TaxiRutaApp extends ConsumerStatefulWidget {
 class _TaxiRutaAppState extends ConsumerState<TaxiRutaApp> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'TaxiRuta',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      routerConfig: AppRoutes.router,
-      builder: (context, child) {
-        // Configurar responsive design
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(
-                MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2)),
-          ),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
+    return AppLifecycleHandler(
+      child: MaterialApp.router(
+        title: 'TaxiRuta',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        routerConfig: AppRoutes.router,
+        builder: (context, child) {
+          // Configurar responsive design
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(
+                  MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2)),
+            ),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
+      ),
     );
   }
 
